@@ -1,0 +1,64 @@
+name: Publish all project news
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Check only, do not publish"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+  schedule:
+    - cron: "0 */2 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: unews-publish-all-news
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout uNews
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Dry-run scan
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNEWS_DRY_RUN: "1"
+        run: npm run publish:all:check
+
+      - name: Publish new patchnotes
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: npm run publish:all
+
+      - name: Commit published state
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+        run: |
+          if git diff --quiet data/published.json; then
+            echo "No published state changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/published.json
+          git commit -m "Update published news state"
+          git push
