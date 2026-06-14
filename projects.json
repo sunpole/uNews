@@ -1,0 +1,17 @@
+{
+  "owner": "sunpole",
+  "mode": "auto-discover-public-repositories",
+  "newsDir": "news",
+  "defaultBranchFallback": "main",
+  "exclude": [
+    "sunpole/uNews"
+  ],
+  "manualProjects": [
+    {
+      "name": "500 Tower Defense",
+      "repo": "sunpole/500",
+      "branch": "main",
+      "newsDir": "news"
+    }
+  ]
+}
