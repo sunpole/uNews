@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "publish:projects": "node scripts/publish-from-projects.js",
-    "publish:projects:check": "node scripts/publish-from-projects.js --check"
+    "publish:projects:check": "node scripts/publish-from-projects.js --check",
+    "publish:all": "node scripts/publish-all-news.js",
+    "publish:all:check": "node scripts/publish-all-news.js --check"
   },
   "keywords": [
     "telegram",
