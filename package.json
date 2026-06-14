@@ -5,7 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "publish:projects": "node scripts/publish-from-projects.js"
+    "publish:projects": "node scripts/publish-from-projects.js",
+    "publish:projects:check": "node scripts/publish-from-projects.js --check"
   },
   "keywords": [
     "telegram",
