@@ -1,0 +1,19 @@
+{
+  "name": "unews",
+  "version": "0.1.0",
+  "description": "Telegram publisher for u-project patchnotes and development news.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "publish:projects": "node scripts/publish-from-projects.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "patchnotes",
+    "github-actions",
+    "news"
+  ],
+  "author": "Anton Mahomedov",
+  "license": "MIT"
+}
