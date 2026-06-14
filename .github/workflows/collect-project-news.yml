@@ -1,0 +1,34 @@
+name: Collect project news
+
+on:
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout uNews
+        uses: actions/checkout@v6
+        with:
+          path: unews
+
+      - name: Checkout 500 Tower Defense
+        uses: actions/checkout@v6
+        with:
+          repository: sunpole/500
+          path: source-projects/500
+
+      - name: Show folders
+        run: |
+          echo "uNews files:"
+          ls -la unews
+
+          echo "500 project files:"
+          ls -la source-projects/500
+
+          echo "500 news files:"
+          ls -la source-projects/500/news || echo "Папка news в 500 пока не найдена"
