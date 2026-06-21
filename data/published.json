@@ -5,7 +5,8 @@
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
-    "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-2-ocr-reality-unews-audit.md"
+    "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-2-ocr-reality-unews-audit.md",
+    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-3-libre2-narrow-ocr.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -40,6 +41,14 @@
       ],
       "post_url": "https://t.me/uNewsLog/11",
       "published_at": "2026-06-21T23:28:13.814Z"
+    },
+    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-3-libre2-narrow-ocr.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        12
+      ],
+      "post_url": "https://t.me/uNewsLog/12",
+      "published_at": "2026-06-21T23:49:44.456Z"
     }
   }
 }
