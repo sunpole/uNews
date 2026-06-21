@@ -650,6 +650,31 @@ TELEGRAM_BOT_TOKEN
 TELEGRAM_CHANNEL_ID
 ```
 
+### Credentials diagnostics / Unauthorized
+
+Перед реальной публикацией Codex должен уметь безопасно проверить Telegram-настройки:
+
+```bash
+npm run diagnose:telegram
+```
+
+Диагностика должна показывать только:
+
+```text
+TELEGRAM_BOT_TOKEN: present/missing
+TELEGRAM_CHANNEL_ID: present/missing
+BOT_USERNAME: present/missing
+bot getMe: OK/FAILED
+channel target: @uNewsLog
+channel getChat: OK/FAILED
+```
+
+Токен нельзя печатать целиком, частично, в URL, в ошибках, в патчноутах или в итоговом отчёте.
+
+Если Telegram возвращает `401 Unauthorized` на `getMe`, `sendPhoto` или `sendMessage`, это почти всегда означает, что `TELEGRAM_BOT_TOKEN` отсутствует, отозван, введён неверно или не относится к нужному боту. В таком случае Codex не должен править патчноут, YAML или изображение как причину ошибки; нужно попросить пользователя заменить `TELEGRAM_BOT_TOKEN` в локальном `.env` и, если публикация должна идти через Actions, в GitHub Secrets репозитория `sunpole/uNews`.
+
+Если локальный `.env` исправлен и `npm run diagnose:telegram` показывает `getMe: OK`, можно повторить dry-run и реальную публикацию. Если менялся только `.env`, коммит делать не нужно.
+
 ---
 
 ## 20. Правила для Telegram-поста

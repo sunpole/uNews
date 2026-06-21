@@ -112,6 +112,33 @@ npm run publish:projects -- "../500_td_game/news/2026-06-14-500td-v1-0-2-pages-p
 
 Локальные секреты должны храниться только в `.env`. Этот файл нельзя добавлять в GitHub.
 
+## Credentials diagnostics / Unauthorized
+
+Перед реальной публикацией можно безопасно проверить Telegram-настройки:
+
+```bash
+npm run diagnose:telegram
+```
+
+Диагностика показывает только наличие переменных, результат `getMe`, целевой канал и результат `getChat`. Она не печатает токен целиком или частично.
+
+Ожидаемые локальные переменные:
+
+```env
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHANNEL_ID=@uNewsLog
+BOT_USERNAME=@uNewsDev_bot
+```
+
+Если публикация падает с `Telegram sendPhoto failed: Unauthorized` или диагностика показывает `bot getMe: FAILED (401)`, проблема в `TELEGRAM_BOT_TOKEN`: токен отсутствует, отозван, введён неверно или не относится к нужному Telegram-боту. В этом случае нужно заменить `TELEGRAM_BOT_TOKEN` в локальном `.env` на актуальный токен `@uNewsDev_bot`.
+
+Если локально публикация работает, а GitHub Actions падает, проверьте repository secrets для `sunpole/uNews`:
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHANNEL_ID`
+
+Значения секретов нельзя публиковать в README, логах, issue, pull request или патчноутах.
+
 ## Telegram
 
 - Канал: [@uNewsLog](https://t.me/uNewsLog)
