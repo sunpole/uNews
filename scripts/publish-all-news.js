@@ -3,10 +3,14 @@
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import {
+  assertPublicationPolicy,
+  assertRealPublishAllowed,
+  buildPostUrl,
+  extractTelegramMessageIds,
+} from "./patchnote-policy.js";
 
 const OWNER_API = "https://api.github.com";
-const TELEGRAM_CAPTION_LIMIT = 1024;
-const TELEGRAM_MESSAGE_LIMIT = 4096;
 const MAX_POSTS_PER_RUN = Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 10);
 
 function parseArgs(argv) {
@@ -38,6 +42,13 @@ async function loadJson(filePath, fallback) {
   } catch {
     return fallback;
   }
+}
+
+function normalizePublishedState(state) {
+  return {
+    published: Array.isArray(state.published) ? state.published : [],
+    details: state.details && typeof state.details === "object" ? state.details : {},
+  };
 }
 
 function parsePatchnote(source, label) {
@@ -81,28 +92,9 @@ function stripQuotes(value) {
   return value;
 }
 
-function getImageNames(frontMatter) {
-  if (Array.isArray(frontMatter.images) && frontMatter.images.length > 0) return frontMatter.images.filter(Boolean);
-  if (frontMatter.image) return [frontMatter.image];
-  return [];
-}
-
-function getTelegramText(frontMatter, body) {
-  const shortTextMatch = body.match(/(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i);
-  const text = shortTextMatch ? shortTextMatch[1] : body;
-  return text.trim() || frontMatter.title || "uNews";
-}
-
-function limitTelegramText(text, limit) {
-  const suffix = "\n\n...\nПолный текст см. в патчноуте.";
-  if (text.length <= limit) return { text, truncated: false };
-  const usableLength = Math.max(0, limit - suffix.length);
-  return { text: `${text.slice(0, usableLength).trimEnd()}${suffix}`, truncated: true };
-}
-
 function githubHeaders() {
   const headers = {
-    "Accept": "application/vnd.github+json",
+    Accept: "application/vnd.github+json",
     "X-GitHub-Api-Version": "2022-11-28",
     "User-Agent": "uNews-publisher",
   };
@@ -142,7 +134,12 @@ async function discoverProjects(config) {
     for (const repo of repos) {
       const fullName = repo.full_name;
       if (exclude.has(fullName) || seen.has(fullName) || repo.archived) continue;
-      projects.push({ name: repo.name, repo: fullName, branch: repo.default_branch || config.defaultBranchFallback || "main", newsDir: config.newsDir || "news" });
+      projects.push({
+        name: repo.name,
+        repo: fullName,
+        branch: repo.default_branch || config.defaultBranchFallback || "main",
+        newsDir: config.newsDir || "news",
+      });
       seen.add(fullName);
     }
     page += 1;
@@ -159,7 +156,13 @@ async function listNewsFiles(project) {
   if (!entries || !Array.isArray(entries)) return [];
   return entries
     .filter((entry) => entry.type === "file" && entry.name.endsWith(".md"))
-    .map((entry) => ({ project, name: entry.name, path: entry.path, downloadUrl: entry.download_url, key: `${project.repo}|${branch}|${entry.path}` }))
+    .map((entry) => ({
+      project,
+      name: entry.name,
+      path: entry.path,
+      downloadUrl: entry.download_url,
+      key: `${project.repo}|${branch}|${entry.path}`,
+    }))
     .sort((a, b) => a.path.localeCompare(b.path));
 }
 
@@ -174,7 +177,10 @@ function imageDownloadUrl(newsFile, imageName) {
   const branch = newsFile.project.branch || "main";
   const dir = path.posix.dirname(newsFile.path);
   const imagePath = `${dir}/${imageName}`;
-  return `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${imagePath.split("/").map(encodeURIComponent).join("/")}`;
+  return `https://raw.githubusercontent.com/${owner}/${repo}/${encodeURIComponent(branch)}/${imagePath
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/")}`;
 }
 
 async function fetchImageBlob(url) {
@@ -222,29 +228,59 @@ async function telegramRequest(token, method, body) {
 }
 
 async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
-  const imageNames = getImageNames(patchnote.frontMatter);
-  const telegramText = getTelegramText(patchnote.frontMatter, patchnote.body);
-  const caption = limitTelegramText(telegramText, TELEGRAM_CAPTION_LIMIT);
-  const message = limitTelegramText(telegramText, TELEGRAM_MESSAGE_LIMIT);
-  const mediaItems = imageNames.map((name) => ({ name, url: imageDownloadUrl(patchnote, name) }));
+  const policy = assertPublicationPolicy({
+    frontMatter: patchnote.frontMatter,
+    body: patchnote.body,
+    label: patchnote.key,
+  });
+  const mediaItems = policy.imageNames.map((name) => ({ name, url: imageDownloadUrl(patchnote, name) }));
   const method = mediaItems.length > 1 ? "sendMediaGroup" : mediaItems.length === 1 ? "sendPhoto" : "sendMessage";
 
   console.log(`${dryRun ? "Would publish" : "Publishing"}: ${patchnote.key} via ${method}`);
-  if (dryRun) return { method, published: false };
+  console.log(
+    JSON.stringify(
+      {
+        method,
+        images: policy.imageNames,
+        captionLength: policy.captionText.length,
+        captionWasTruncated: policy.captionWasTruncated,
+        link: policy.link,
+        hashtags: policy.hashtags,
+        captionPreview: policy.captionText,
+      },
+      null,
+      2,
+    ),
+  );
 
-  if (method === "sendMediaGroup") await sendMediaGroup({ token, chatId, mediaItems, caption: caption.text });
-  else if (method === "sendPhoto") await sendPhoto({ token, chatId, imageUrl: mediaItems[0].url, imageName: mediaItems[0].name, caption: caption.text });
-  else await sendMessage({ token, chatId, text: message.text });
+  if (dryRun) return { method, published: false, messageIds: [], postUrl: null };
 
-  return { method, published: true };
+  let payload;
+  if (method === "sendMediaGroup") {
+    payload = await sendMediaGroup({ token, chatId, mediaItems, caption: policy.captionText });
+  } else if (method === "sendPhoto") {
+    payload = await sendPhoto({ token, chatId, imageUrl: mediaItems[0].url, imageName: mediaItems[0].name, caption: policy.captionText });
+  } else {
+    payload = await sendMessage({ token, chatId, text: policy.messageText });
+  }
+
+  const messageIds = extractTelegramMessageIds(payload);
+  return {
+    method,
+    published: true,
+    messageIds,
+    postUrl: buildPostUrl(chatId, messageIds[0]),
+  };
 }
 
 async function main() {
   await loadEnvFile();
   const args = parseArgs(process.argv.slice(2));
+  assertRealPublishAllowed({ dryRun: args.dryRun, commandName: "publish:all" });
+
   const config = await loadJson("projects.json", { owner: "sunpole", newsDir: "news", exclude: ["sunpole/uNews"] });
   const statePath = "data/published.json";
-  const state = await loadJson(statePath, { published: [] });
+  const state = normalizePublishedState(await loadJson(statePath, { published: [], details: {} }));
   const publishedSet = new Set(state.published || []);
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -272,7 +308,15 @@ async function main() {
   for (const file of toPublish) {
     const patchnote = await loadPatchnote(file);
     const result = await publishPatchnote(patchnote, { dryRun: args.dryRun, token, chatId });
-    if (result.published) newlyPublished.push(file.key);
+    if (result.published) {
+      newlyPublished.push(file.key);
+      state.details[file.key] = {
+        method: result.method,
+        message_ids: result.messageIds,
+        post_url: result.postUrl,
+        published_at: new Date().toISOString(),
+      };
+    }
   }
 
   if (!args.dryRun && newlyPublished.length > 0) {

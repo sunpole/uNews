@@ -5,6 +5,7 @@ import path from "node:path";
 import process from "node:process";
 
 const TELEGRAM_API = "https://api.telegram.org";
+const TELEGRAM_RETRY_ATTEMPTS = 3;
 
 async function loadLocalEnv() {
   const envPath = path.resolve(process.cwd(), ".env");
@@ -67,7 +68,7 @@ async function telegramJson(token, method, body = null) {
       }
     : { method: "GET" };
 
-  const response = await fetch(`${TELEGRAM_API}/bot${token}/${method}`, init);
+  const response = await fetchWithRetry(`${TELEGRAM_API}/bot${token}/${method}`, init);
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.ok) {
     const description = payload?.description || response.statusText || "Telegram request failed";
@@ -77,6 +78,25 @@ async function telegramJson(token, method, body = null) {
   }
 
   return payload;
+}
+
+async function fetchWithRetry(url, init) {
+  let lastError = null;
+  for (let attempt = 1; attempt <= TELEGRAM_RETRY_ATTEMPTS; attempt += 1) {
+    try {
+      return await fetch(url, init);
+    } catch (error) {
+      lastError = error;
+      if (attempt < TELEGRAM_RETRY_ATTEMPTS) {
+        await sleep(500 * attempt);
+      }
+    }
+  }
+  throw lastError;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function main() {
@@ -137,4 +157,3 @@ main().catch((error) => {
   console.error(`diagnostics failed: ${sanitizeError(error, process.env.TELEGRAM_BOT_TOKEN || "")}`);
   process.exit(1);
 });
-

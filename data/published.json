@@ -3,5 +3,16 @@
     "sunpole/500|main|news/2026-06-14-500td-v1-0-2-pages-preview.md",
     "sunpole/500|main|news/2026-06-15-500td-test-autopublish.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md"
-  ]
+  ],
+  "details": {
+    "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        8
+      ],
+      "post_url": "https://t.me/uNewsLog/8",
+      "published_at": null,
+      "caption_edited_at": "2026-06-21T12:39:34.920Z"
+    }
+  }
 }

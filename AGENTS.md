@@ -673,7 +673,35 @@ channel getChat: OK/FAILED
 
 Если Telegram возвращает `401 Unauthorized` на `getMe`, `sendPhoto` или `sendMessage`, это почти всегда означает, что `TELEGRAM_BOT_TOKEN` отсутствует, отозван, введён неверно или не относится к нужному боту. В таком случае Codex не должен править патчноут, YAML или изображение как причину ошибки; нужно попросить пользователя заменить `TELEGRAM_BOT_TOKEN` в локальном `.env` и, если публикация должна идти через Actions, в GitHub Secrets репозитория `sunpole/uNews`.
 
-Если локальный `.env` исправлен и `npm run diagnose:telegram` показывает `getMe: OK`, можно повторить dry-run и реальную публикацию. Если менялся только `.env`, коммит делать не нужно.
+Если локальный `.env` исправлен и `npm run diagnose:telegram` показывает `getMe: OK`, можно повторить dry-run/check. Реальная публикация новых постов должна идти через GitHub Actions, а не с локального компьютера. Если менялся только `.env`, коммит делать не нужно.
+
+### GitHub-first publishing
+
+Основной путь публикации:
+
+```text
+проект -> public news/*.md + image -> GitHub -> uNews GitHub Actions -> @uNewsLog
+```
+
+Codex не должен считать локальный `npm run publish:all` или `npm run publish:projects` основным способом публикации. Локально разрешены:
+
+```bash
+npm run publish:projects:check -- <path-to-news.md>
+npm run publish:all:check
+npm run diagnose:telegram
+npm run check:fixtures
+```
+
+Реальные publish-команды должны отправлять Telegram-посты только внутри GitHub Actions (`GITHUB_ACTIONS=true`). Локальный реальный publish блокируется по умолчанию.
+
+Workflow `.github/workflows/publish-all-news.yml` является главным publisher:
+
+- `workflow_dispatch dry_run=true` запускает check;
+- `workflow_dispatch dry_run=false` публикует;
+- schedule публикует новые pending patchnotes;
+- после успешной публикации обновляет `data/published.json`.
+
+`data/published.json` сохраняет совместимость через массив `published` и может хранить дополнительные `details` для новых публикаций: `method`, `message_ids`, `post_url`, `published_at`.
 
 ---
 
@@ -703,6 +731,43 @@ https://github.com/sunpole/500
 Не делать пост слишком длинным.
 
 Если текст слишком длинный, сокращать для Telegram, но не портить исходный `.md`-файл.
+
+### Обязательный footer Telegram-поста
+
+Финальная подпись Telegram должна собираться policy-слоем, а не копироваться напрямую из блока `Короткий текст для Telegram`.
+
+В каждом посте обязательны:
+
+```text
+Ссылка: <web_url или repo_url/branch>
+
+#<softwareEnglish> #<softwareRussian> #uNews #Sunpole
+```
+
+Правило ссылки:
+
+- если есть `web_url`, использовать его;
+- если `web_url` нет, использовать `repo_url`;
+- если есть `branch` и нет `web_url`, использовать ссылку на ветку GitHub;
+- если нет ни `web_url`, ни `repo_url`, публикацию блокировать.
+
+Обязательные hashtag mappings:
+
+```text
+uSugar -> #uSugar #тыСахар #uNews #Sunpole
+uNews -> #uNews #тыНовости #uNews #Sunpole
+uDream -> #uDream #тыСон #uNews #Sunpole
+uChurch -> #uChurch #тыЦерковь #uNews #Sunpole
+500 Tower Defense -> #500TD #500ТД #uNews #Sunpole
+```
+
+Если mapping неизвестен, check должен упасть с понятной ошибкой и потребовать добавить mapping.
+
+Для `type: patch`, `docs`, `feature`, `bugfix`, `release` финальный caption обязан содержать слово `патч`, `обновление`, `релиз` или `документационное обновление`. Если автор патчноута забыл это в коротком тексте, policy добавляет компактную вводную фразу автоматически.
+
+Публикация блокируется, если найдено подозрение на секреты, `.env`, token-like строки, `TELEGRAM_BOT_TOKEN`, `BOT_TOKEN`, `DEEPSEEK_API_KEY`. Для `project: uSugar` дополнительно блокировать приватные Telegram identifiers, ngrok URL и явные glucose-like медицинские значения.
+
+Пост `https://t.me/uNewsLog/8` был опубликован до этого правила и затем исправлен через `editMessageCaption`: ссылка и хештеги добавлены без создания дубля. Дубликат поста ради footer создавать нельзя.
 
 ---
 

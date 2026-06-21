@@ -9,7 +9,9 @@
     "publish:projects:check": "node scripts/publish-from-projects.js --check",
     "publish:all": "node scripts/publish-all-news.js",
     "publish:all:check": "node scripts/publish-all-news.js --check",
-    "diagnose:telegram": "node scripts/diagnose-telegram-credentials.js"
+    "diagnose:telegram": "node scripts/diagnose-telegram-credentials.js",
+    "check:fixtures": "node scripts/check-fixtures.js",
+    "edit:caption": "node scripts/edit-message-caption.js"
   },
   "keywords": [
     "telegram",

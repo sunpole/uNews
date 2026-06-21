@@ -102,15 +102,47 @@ npm run publish:projects:check -- "../500_td_game/news/2026-06-14-500td-v1-0-2-p
 }
 ```
 
-## Реальная публикация
+## GitHub-first publishing
 
-Отправка в Telegram:
+Основной путь реальной публикации — только GitHub Actions. Проект-источник кладёт патчноут и изображение в публичную папку `news/`, после чего workflow `Publish all project news` в uNews находит новый файл, проверяет правила публикации, отправляет пост в `@uNewsLog` и обновляет `data/published.json`.
+
+Локально разрешены только безопасные команды:
 
 ```bash
-npm run publish:projects -- "../500_td_game/news/2026-06-14-500td-v1-0-2-pages-preview.md"
+npm run publish:projects:check -- "../500_td_game/news/2026-06-14-500td-v1-0-2-pages-preview.md"
+npm run publish:all:check
+npm run diagnose:telegram
+npm run check:fixtures
 ```
 
+Команды `npm run publish:projects` и `npm run publish:all` по умолчанию блокируют реальную отправку с локального компьютера. Они должны отправлять Telegram-посты только внутри GitHub Actions, где `GITHUB_ACTIONS=true`.
+
 Локальные секреты должны храниться только в `.env`. Этот файл нельзя добавлять в GitHub.
+
+## Required Telegram footer
+
+Финальная подпись Telegram собирается автоматически через policy-слой. Текст из блока `Короткий текст для Telegram` не публикуется “как есть”: к нему добавляются обязательные ссылка и хештеги.
+
+Правило ссылки:
+
+- если есть `web_url`, используется он;
+- если `web_url` нет, используется `repo_url`;
+- если указан `branch` и нет `web_url`, формируется ссылка на GitHub-ветку;
+- если нет ни `web_url`, ни `repo_url`, публикация блокируется.
+
+Обязательные хештеги:
+
+- `uSugar` → `#uSugar #тыСахар #uNews #Sunpole`
+- `uNews` → `#uNews #тыНовости #uNews #Sunpole`
+- `uDream` → `#uDream #тыСон #uNews #Sunpole`
+- `uChurch` → `#uChurch #тыЦерковь #uNews #Sunpole`
+- `500 Tower Defense` → `#500TD #500ТД #uNews #Sunpole`
+
+Если для проекта нет mapping, check падает и mapping нужно добавить до публикации.
+
+Для `type: patch`, `docs`, `feature`, `bugfix` и `release` финальная подпись обязательно содержит слово “патч”, “обновление”, “релиз” или “документационное обновление”. Если автор забыл это в коротком тексте, policy добавляет компактную вводную фразу автоматически.
+
+Публикация блокируется, если в патчноуте есть подозрение на секреты, `.env`, token-like строки, `TELEGRAM_BOT_TOKEN`, `DEEPSEEK_API_KEY`. Для `uSugar` дополнительно блокируются приватные Telegram identifiers, ngrok-ссылки и явные glucose-like медицинские значения.
 
 ## Credentials diagnostics / Unauthorized
 
@@ -146,14 +178,16 @@ BOT_USERNAME=@uNewsDev_bot
 
 ## GitHub Actions
 
-Текущий workflow `Collect project news` пока умеет вручную проверить структуру проекта и наличие папки `news/`.
+Главный workflow публикации — `.github/workflows/publish-all-news.yml`.
 
-Следующий этап — сделать центральный publisher для всех репозиториев автора:
+- `workflow_dispatch` с `dry_run=true` запускает `npm run publish:all:check`;
+- `workflow_dispatch` с `dry_run=false` и расписание запускают `npm run publish:all`;
+- после успешной реальной публикации workflow коммитит обновлённый `data/published.json`;
+- `data/published.json` сохраняет старый список `published` и может дополнительно хранить `details` с `message_ids`, `post_url`, `method` и `published_at` для новых публикаций.
 
-- список проектов в `projects.json`;
-- список уже опубликованных патчноутов в `data/published.json`;
-- автоматический запуск по расписанию;
-- защита от повторной публикации одного и того же патчноута.
+Workflow `Collect project news` остаётся вспомогательной диагностикой структуры проектов.
+
+Пост `https://t.me/uNewsLog/8` был опубликован до обязательного footer-rule, а затем исправлен maintenance-командой `editMessageCaption`: подпись обновлена ссылкой и хештегами без создания дубля.
 
 ## Статус
 
