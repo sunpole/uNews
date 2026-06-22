@@ -4,6 +4,8 @@ export const TELEGRAM_MESSAGE_LIMIT = 4096;
 const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "feature", "bugfix", "release"]);
 const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление)/i;
 const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i;
+const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
+const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р•|Р–|Р—|Р™|Рљ|Рњ|Рђ|СЃ|С‚|СЊ|С‹|СЋ|СЏ|СЂ|С‡|С€|С‰)/u;
 
 const HASHTAG_MAPPING = new Map([
   ["uSugar", "#uSugar #тыСахар #uNews #Sunpole"],
@@ -111,7 +113,7 @@ function validatePatchnote({ frontMatter, body }) {
   const errors = [];
   const textForSafety = `${JSON.stringify(frontMatter)}\n${body}`;
 
-  for (const field of ["project", "series", "title"]) {
+  for (const field of ["project", "series", "title", "version"]) {
     if (!frontMatter[field]) errors.push(`Missing required field: ${field}`);
   }
 
@@ -130,9 +132,29 @@ function validatePatchnote({ frontMatter, body }) {
   const secretRisk = findSecretRisk(textForSafety);
   if (secretRisk) errors.push(secretRisk);
 
+  const brokenTextRisk = findBrokenTextRisk(textForSafety);
+  if (brokenTextRisk) errors.push(brokenTextRisk);
+
   if (frontMatter.project === "uSugar") {
     const usugarRisk = findUsugarRisk(textForSafety);
     if (usugarRisk) errors.push(usugarRisk);
+  }
+
+  if (frontMatter.project && RUSSIAN_REQUIRED_PROJECTS.has(frontMatter.project)) {
+    if (!frontMatter.image_text) {
+      errors.push("Missing image_text: uSugar cards require machine-checkable visible text.");
+    } else {
+      const imageTextRisk = findBrokenTextRisk(String(frontMatter.image_text));
+      if (imageTextRisk) errors.push(`image_text failed: ${imageTextRisk}`);
+      if (!hasMeaningfulRussian(String(frontMatter.image_text))) {
+        errors.push("image_text must contain meaningful Russian text for uSugar.");
+      }
+    }
+
+    const russianText = `${frontMatter.title || ""}\n${body || ""}`;
+    if (!hasMeaningfulRussian(russianText)) {
+      errors.push("uSugar caption/body must contain meaningful Russian prose.");
+    }
   }
 
   return errors;
@@ -194,6 +216,20 @@ function findSecretRisk(text) {
 
   const match = checks.find((check) => check.re.test(text));
   return match ? `Secret-like text detected: ${match.label}` : null;
+}
+
+function findBrokenTextRisk(text) {
+  if (BROKEN_TEXT_RE.test(text)) {
+    return "Broken/mojibake text detected.";
+  }
+  return null;
+}
+
+function hasMeaningfulRussian(text) {
+  const cyrillic = (String(text).match(/[А-Яа-яЁё]/g) || []).length;
+  const latin = (String(text).match(/[A-Za-z]/g) || []).length;
+  if (cyrillic < 30) return false;
+  return cyrillic >= Math.max(30, Math.floor(latin * 0.2));
 }
 
 function findUsugarRisk(text) {

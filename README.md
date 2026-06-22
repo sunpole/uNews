@@ -203,3 +203,30 @@ Workflow `Collect project news` остаётся вспомогательной 
 ## Лицензия
 
 MIT
+
+## Russian Publication Policy
+
+Новости проектов Антона по умолчанию публикуются на русском языке. Английские технические слова допустимы как короткие термины (`OCR`, `WebApp`, `runtime`, `Settings`, `Food Log`), но основной текст Telegram-поста должен быть понятным русским описанием обновления.
+
+Для `project: uSugar` policy дополнительно требует:
+
+- поле `version`;
+- поле `image_text` с машинно-проверяемым описанием видимого текста карточки;
+- русский caption/body;
+- отсутствие `????`, `???`, `�` и типичных mojibake-фрагментов;
+- footer `#uSugar #тыСахар #uNews #Sunpole`;
+- ссылку через `web_url` или `repo_url`;
+- отсутствие приватных Telegram identifiers, медицинских значений, `.env`, токенов и ngrok-ссылок.
+
+Карточка Telegram для uSugar должна быть на русском или почти без текста. Английская карточка для русского uSugar-поста считается ошибкой.
+
+## Repairing Existing Telegram Posts
+
+Старые опубликованные посты нельзя чинить повторной публикацией: это создаёт дубли. Если у поста известен `message_id` в `data/published.json`, используйте maintenance-команды:
+
+```bash
+npm run edit:media -- -- --message-id 14 --patchnote "../002_usugar/news/example.md" --key "published-key" --record-state
+npm run edit:caption -- -- --message-id 14 --patchnote "../002_usugar/news/example.md" --key "published-key" --record-state
+```
+
+`edit:media` заменяет картинку и caption через Telegram `editMessageMedia`. Если Telegram отказывает в замене изображения, используйте `edit:caption` и честно зафиксируйте, что старая картинка осталась исторической.

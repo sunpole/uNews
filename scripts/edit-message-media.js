@@ -21,8 +21,8 @@ function parseArgs(argv) {
 
 function printUsage() {
   console.log(`Usage:
-  npm run edit:caption -- -- --message-id 8 --patchnote <path-to-news.md> [--key <published-key>] [--record-state]
-  node scripts/edit-message-caption.js --message-id 8 --patchnote <path-to-news.md> [--key <published-key>] [--record-state]`);
+  npm run edit:media -- -- --message-id 14 --patchnote <path-to-news.md> [--key <published-key>] [--record-state]
+  node scripts/edit-message-media.js --message-id 14 --patchnote <path-to-news.md> [--key <published-key>] [--record-state]`);
 }
 
 async function loadLocalEnv() {
@@ -86,21 +86,28 @@ function parseSimpleYaml(yamlSource) {
   return result;
 }
 
-async function editMessageCaption({ token, chatId, messageId, caption }) {
-  const body = new URLSearchParams({
-    chat_id: chatId,
-    message_id: String(messageId),
+async function editMessageMedia({ token, chatId, messageId, imagePath, caption }) {
+  const image = await readFile(imagePath);
+  const media = {
+    type: "photo",
+    media: "attach://photo",
     caption,
-  });
+  };
 
-  const response = await fetch(`https://api.telegram.org/bot${token}/editMessageCaption`, {
+  const form = new FormData();
+  form.append("chat_id", chatId);
+  form.append("message_id", String(messageId));
+  form.append("media", JSON.stringify(media));
+  form.append("photo", new Blob([image], { type: "image/png" }), path.basename(imagePath));
+
+  const response = await fetch(`https://api.telegram.org/bot${token}/editMessageMedia`, {
     method: "POST",
-    body,
+    body: form,
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok || !payload?.ok) {
     const description = payload?.description || response.statusText;
-    throw new Error(`Telegram editMessageCaption failed: ${description}`);
+    throw new Error(`Telegram editMessageMedia failed: ${description}`);
   }
   return payload;
 }
@@ -115,6 +122,7 @@ async function updatePublishedDetails({ key, method, messageId, postUrl }) {
     post_url: postUrl,
     published_at: state.details[key]?.published_at || null,
     caption_edited_at: new Date().toISOString(),
+    media_edited_at: new Date().toISOString(),
   };
   await writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
 }
@@ -135,11 +143,18 @@ async function main() {
   const markdown = await readFile(markdownPath, "utf8");
   const { frontMatter, body } = parsePatchnote(markdown, markdownPath);
   const policy = assertPublicationPolicy({ frontMatter, body, label: markdownPath });
+  if (policy.imageNames.length !== 1) {
+    throw new Error(`edit:media requires exactly one image, got ${policy.imageNames.length}.`);
+  }
 
-  await editMessageCaption({
+  const imagePath = path.resolve(path.dirname(markdownPath), policy.imageNames[0]);
+  await access(imagePath);
+
+  await editMessageMedia({
     token,
     chatId,
     messageId: args.messageId,
+    imagePath,
     caption: policy.captionText,
   });
 
@@ -153,7 +168,7 @@ async function main() {
     });
   }
 
-  console.log(`Edited message caption: ${postUrl || args.messageId}`);
+  console.log(`Edited message media: ${postUrl || args.messageId}`);
 }
 
 main().catch((error) => {

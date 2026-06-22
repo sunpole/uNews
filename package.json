@@ -11,7 +11,8 @@
     "publish:all:check": "node scripts/publish-all-news.js --check",
     "diagnose:telegram": "node scripts/diagnose-telegram-credentials.js",
     "check:fixtures": "node scripts/check-fixtures.js",
-    "edit:caption": "node scripts/edit-message-caption.js"
+    "edit:caption": "node scripts/edit-message-caption.js",
+    "edit:media": "node scripts/edit-message-media.js"
   },
   "keywords": [
     "telegram",
