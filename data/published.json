@@ -10,7 +10,8 @@
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-4-glucometer-photo-ocr.md",
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-5-ocr-mode-smart-text.md",
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-6-runtime-hotfix.md",
-    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-7-settings-menu-ux.md"
+    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-7-settings-menu-ux.md",
+    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-8-remove-legacy-buttons.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -91,6 +92,14 @@
       "published_at": "2026-06-22T06:30:38.080Z",
       "caption_edited_at": "2026-06-22T15:04:04.861Z",
       "media_edited_at": "2026-06-22T15:04:04.862Z"
+    },
+    "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-8-remove-legacy-buttons.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        17
+      ],
+      "post_url": "https://t.me/uNewsLog/17",
+      "published_at": "2026-06-22T15:23:16.596Z"
     }
   }
 }
