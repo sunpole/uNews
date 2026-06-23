@@ -13,7 +13,8 @@
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-7-settings-menu-ux.md",
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-8-remove-legacy-buttons.md",
     "sunpole/uSugar|main|news/2026-06-22-usugar-v1-5-9-russian-command-aliases.md",
-    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-0-family-group-alias-fix.md"
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-0-family-group-alias-fix.md",
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-1-group-whoami-trusted-topic.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -118,6 +119,14 @@
       ],
       "post_url": "https://t.me/uNewsLog/19",
       "published_at": "2026-06-22T23:37:53.944Z"
+    },
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-1-group-whoami-trusted-topic.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        20
+      ],
+      "post_url": "https://t.me/uNewsLog/20",
+      "published_at": "2026-06-23T04:15:26.834Z"
     }
   }
 }
