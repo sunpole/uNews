@@ -16,7 +16,8 @@
     "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-0-family-group-alias-fix.md",
     "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-1-group-whoami-trusted-topic.md",
     "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-2-trusted-family-thread.md",
-    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-3-settings-webapp-hotfix.md"
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-3-settings-webapp-hotfix.md",
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-4-command-routing-settings-button.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -145,6 +146,14 @@
       ],
       "post_url": "https://t.me/uNewsLog/22",
       "published_at": "2026-06-23T16:33:59.842Z"
+    },
+    "sunpole/uSugar|main|news/2026-06-23-usugar-v1-6-4-command-routing-settings-button.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        23
+      ],
+      "post_url": "https://t.me/uNewsLog/23",
+      "published_at": "2026-06-24T02:07:13.189Z"
     }
   }
 }
