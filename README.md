@@ -6,7 +6,7 @@
 
 **uNews** — единая система публикации новостей, патчноутов и отчётов разработки по проектам Антона.
 
-Текущая версия: **0.3.2**. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
+Текущая версия: **0.3.3**. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
 
 Главная идея: каждый проект хранит свои новости в папке `news/`, а uNews забирает эти патчноуты и публикует их в Telegram-канал через бота.
 
@@ -37,7 +37,7 @@
 3. uNews просыпается раз в четыре часа или вручную.
 4. Внутри проекта более ранняя версия всегда идёт первой.
 5. Среди проектов выбирается самая старая запись по `queued_at`.
-6. За запуск публикуется ровно один Telegram-пост.
+6. За запуск публикуется до 20 готовых Telegram-постов в строгом FIFO-порядке с паузой 1,2 секунды.
 7. Результат немедленно записывается в `data/published.json`.
 
 Приватные репозитории не сканируются. Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md).
@@ -192,7 +192,7 @@ BOT_USERNAME=@uNewsDev_bot
 - `workflow_dispatch` с `dry_run=true` запускает `npm run publish:all:check`;
 - `workflow_dispatch` с `dry_run=false` и расписание запускают `npm run publish:all`;
 - каждая проверка диагностирует действительность Telegram bot token через `getMe` и доступ к каналу через `getChat`;
-- после успешной реальной публикации workflow сразу коммитит состояние `data/`;
+- после каждой успешной реальной публикации workflow сразу коммитит `data/published.json`;
 - ошибка одного проекта записывается в `data/errors.json` и не останавливает другие проекты;
 - состояние очереди отражается в `data/health.json` и на сайте проекта;
 - `data/published.json` сохраняет старый список `published` и может дополнительно хранить `details` с `message_ids`, `post_url`, `method` и `published_at` для новых публикаций.
