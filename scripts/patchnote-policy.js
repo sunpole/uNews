@@ -231,6 +231,18 @@ function findSecretRisk(text) {
     { re: /\bTELEGRAM_BOT_TOKEN\b/i, label: "TELEGRAM_BOT_TOKEN" },
     { re: /\bBOT_TOKEN\b/i, label: "BOT_TOKEN" },
     { re: /\bDEEPSEEK_API_KEY\b/i, label: "DEEPSEEK_API_KEY" },
+    { re: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/, label: "GitHub token" },
+    { re: /\bgithub_pat_[A-Za-z0-9_]{20,}\b/, label: "GitHub fine-grained token" },
+    { re: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/, label: "API token" },
+    { re: /\bAKIA[0-9A-Z]{16}\b/, label: "AWS access key" },
+    { re: /\bAIza[0-9A-Za-z_-]{30,}\b/, label: "Google API key" },
+    { re: /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/, label: "private key" },
+    { re: /\bBearer\s+[A-Za-z0-9._~+/-]{20,}=*/i, label: "Bearer credential" },
+    {
+      re: /\b(?:api[_-]?key|access[_-]?token|client[_-]?secret|password)\s*[:=]\s*["']?[A-Za-z0-9._~+/-]{12,}/i,
+      label: "assigned credential",
+    },
+    { re: /https?:\/\/[^\s/:]+:[^\s/@]+@/i, label: "credential in URL" },
     { re: /(^|[^\w])\.env([^\w]|$)/i, label: ".env reference" },
   ];
 
