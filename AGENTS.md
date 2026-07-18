@@ -985,6 +985,10 @@ queued_at: 2026-07-18T15:40:00Z
 За один запуск публикуется одна новость. Внутри проекта соблюдается порядок версий, между проектами — FIFO по `queued_at`. Ошибка раннего патчноута блокирует только следующие версии того же проекта. Приватные репозитории не сканируются.
 
 Единый план интеграции для ИИ и программиста находится в [UNEWS.md](UNEWS.md), архитектура — в [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md).
+
+## 30. Адаптивное расписание v0.3.0
+
+Частота проверки уменьшается от 15 минут до одной недели при отсутствии новых или изменённых патчноутов. Не редактировать управляемую cron-строку вручную: её меняет `scripts/lib/adaptive-schedule.js`. Для срочной новости после долгого простоя запустить `Publish all project news` вручную с `dry_run=false`.
 ## Russian publication and repair rule
 
 For Anton's project news, write Telegram-facing content in Russian by default. English technical words are allowed only as short terms, for example `OCR`, `WebApp`, `runtime`, `Settings`, and `Food Log`.
