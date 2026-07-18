@@ -24,7 +24,7 @@ import { checkpointPublishedState } from "./lib/git-checkpoint.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
 const MAX_POSTS_PER_RUN = Math.max(1, Math.min(20, Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 20)));
-const TELEGRAM_POST_INTERVAL_MS = Math.max(1100, Number(process.env.UNEWS_TELEGRAM_POST_INTERVAL_MS || 1200));
+const TELEGRAM_POST_INTERVAL_MS = Math.max(61_000, Number(process.env.UNEWS_TELEGRAM_POST_INTERVAL_MS || 61_000));
 
 function parseArgs(argv) {
   return {
