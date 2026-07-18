@@ -14,6 +14,7 @@ import { parseQueuedAt, selectQueueHead } from "./lib/queue.js";
 import { buildHealthSnapshot, normalizePublishedState, writeJsonAtomic, writeJsonIfChanged } from "./lib/state.js";
 
 const OWNER_API = "https://api.github.com";
+const MIN_PUBLISH_INTERVAL_MS = Number(process.env.UNEWS_MIN_PUBLISH_INTERVAL_MINUTES || 9) * 60 * 1000;
 
 function parseArgs(argv) {
   return {
@@ -253,6 +254,13 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
   };
 }
 
+function latestPublishedAt(details) {
+  const timestamps = Object.values(details || {})
+    .map((entry) => Date.parse(entry?.published_at || ""))
+    .filter(Number.isFinite);
+  return timestamps.length ? Math.max(...timestamps) : null;
+}
+
 async function main() {
   await loadEnvFile();
   const args = parseArgs(process.argv.slice(2));
@@ -304,7 +312,16 @@ async function main() {
   const queue = selectQueueHead(inspected);
   const reportedErrors = [...scanErrors, ...queue.blocked];
   console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Reported errors: ${reportedErrors.length}.`);
-  if (queue.selected) {
+  const previousPublishedAt = latestPublishedAt(state.details);
+  const cooldownRemaining = previousPublishedAt === null
+    ? 0
+    : Math.max(0, previousPublishedAt + MIN_PUBLISH_INTERVAL_MS - Date.now());
+
+  if (queue.selected && cooldownRemaining > 0) {
+    console.log(`Queue head is waiting for the global publication pause: ${Math.ceil(cooldownRemaining / 1000)} seconds.`);
+  }
+
+  if (queue.selected && cooldownRemaining === 0) {
     console.log(`Queue head: ${queue.selected.key} (${queue.selected.queuedAt}, ${queue.selected.queuedAtSource}).`);
   }
   for (const blocked of reportedErrors) {
@@ -335,8 +352,8 @@ async function main() {
   const checkedAt = new Date().toISOString();
   const health = buildHealthSnapshot({
     checkedAt,
-    pendingCount: candidates.length - (queue.selected ? 1 : 0),
-    readyCount: Math.max(0, queue.readyHeads.length - (queue.selected ? 1 : 0)),
+    pendingCount: candidates.length - (queue.selected && cooldownRemaining === 0 ? 1 : 0),
+    readyCount: Math.max(0, queue.readyHeads.length - (queue.selected && cooldownRemaining === 0 ? 1 : 0)),
     blockedCount: reportedErrors.length,
     selectedKey: queue.selected?.key,
     dryRun: false,
