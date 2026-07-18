@@ -29,6 +29,7 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - name: Checkout uNews
@@ -65,7 +66,7 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
           UNEWS_MAX_POSTS_PER_RUN: "20"
-          UNEWS_TELEGRAM_POST_INTERVAL_MS: "1200"
+          UNEWS_TELEGRAM_POST_INTERVAL_MS: "61000"
           UNEWS_GIT_CHECKPOINT: "1"
         run: |
           git config user.name "github-actions[bot]"
