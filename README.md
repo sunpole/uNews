@@ -141,7 +141,7 @@ npm run check:fixtures
 Обязательные хештеги:
 
 - `uSugar` → `#uSugar #тыСахар #uNews #Sunpole`
-- `uNews` → `#uNews #тыНовости #uNews #Sunpole`
+- `uNews` → `#uNews #тыНовости #Sunpole`
 - `uDream` → `#uDream #тыСон #uNews #Sunpole`
 - `uChurch` → `#uChurch #тыЦерковь #uNews #Sunpole`
 - `500 Tower Defense` → `#500TD #500ТД #uNews #Sunpole`

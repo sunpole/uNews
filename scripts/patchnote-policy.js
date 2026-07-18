@@ -9,7 +9,7 @@ const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р�
 
 const HASHTAG_MAPPING = new Map([
   ["uSugar", "#uSugar #тыСахар #uNews #Sunpole"],
-  ["uNews", "#uNews #тыНовости #uNews #Sunpole"],
+  ["uNews", "#uNews #тыНовости #Sunpole"],
   ["uDream", "#uDream #тыСон #uNews #Sunpole"],
   ["uChurch", "#uChurch #тыЦерковь #uNews #Sunpole"],
   ["500 Tower Defense", "#500TD #500ТД #uNews #Sunpole"],
