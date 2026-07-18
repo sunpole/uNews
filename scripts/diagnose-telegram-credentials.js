@@ -111,7 +111,7 @@ async function main() {
   console.log(`TELEGRAM_BOT_TOKEN format: ${tokenFormat(token)}`);
   console.log(`TELEGRAM_CHANNEL_ID: ${present(channelId)}`);
   console.log(`BOT_USERNAME: ${present(botUsername)}`);
-  console.log(`channel target: ${channelId || "missing"}`);
+  console.log(`channel target: ${channelId ? (channelId.startsWith("@") ? channelId : "configured") : "missing"}`);
 
   if (!token) {
     console.log("bot getMe: FAILED (missing TELEGRAM_BOT_TOKEN)");
