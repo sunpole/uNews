@@ -2,7 +2,9 @@
   "schema": 1,
   "tier": "fast",
   "cron": "7,22,37,52 * * * *",
-  "last_activity_at": "2026-07-18T19:26:53.431Z",
-  "last_check_at": "2026-07-18T19:27:44.173Z",
-  "candidate_revisions": {}
+  "last_activity_at": "2026-07-18T19:46:20.773Z",
+  "last_check_at": "2026-07-18T19:46:20.773Z",
+  "candidate_revisions": {
+    "sunpole/uNews|main|news/2026-07-18-unews-v0-3-0-adaptive-schedule.md": "96e5ebb8c0d7c82c407032f39f878c70796d2dcc"
+  }
 }
