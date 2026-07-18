@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
 import assert from "node:assert/strict";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
-import { normalizePublishedState, selectedKeyAfterRun } from "./lib/state.js";
+import { normalizePublishedState, selectedKeyAfterRun, writeJsonIfChangedOrStale } from "./lib/state.js";
 
 assert.equal(compareVersions("3.0.0", "3.1.0"), -1);
 assert.equal(compareVersions("3.1.0", "3.0.0"), 1);
@@ -24,6 +27,34 @@ assert.throws(
 assert.deepEqual(normalizePublishedState({ published: [], details: {} }), { published: [], details: {} });
 assert.equal(selectedKeyAfterRun("project|news/item.md", false), "project|news/item.md");
 assert.equal(selectedKeyAfterRun("project|news/item.md", true), null, "published item must disappear from health selection");
+
+const tempDirectory = await mkdtemp(path.join(tmpdir(), "unews-state-"));
+const healthPath = path.join(tempDirectory, "health.json");
+const originalHealth = { last_successful_check_at: "2026-07-18T10:00:00Z", pending_count: 0 };
+const nextHealth = { last_successful_check_at: "2026-07-18T10:15:00Z", pending_count: 0 };
+await writeFile(healthPath, JSON.stringify(originalHealth), "utf8");
+assert.equal(
+  await writeJsonIfChangedOrStale(healthPath, nextHealth, {
+    ignoredKeys: ["last_successful_check_at"],
+    timestampKey: "last_successful_check_at",
+    maxAgeMs: 24 * 60 * 60 * 1000,
+    now: Date.parse("2026-07-18T10:15:00Z"),
+  }),
+  false,
+  "an unchanged fresh health snapshot must not create a commit",
+);
+assert.deepEqual(JSON.parse(await readFile(healthPath, "utf8")), originalHealth);
+assert.equal(
+  await writeJsonIfChangedOrStale(healthPath, nextHealth, {
+    ignoredKeys: ["last_successful_check_at"],
+    timestampKey: "last_successful_check_at",
+    maxAgeMs: 24 * 60 * 60 * 1000,
+    now: Date.parse("2026-07-19T10:00:00Z"),
+  }),
+  true,
+  "a daily health heartbeat must eventually be persisted",
+);
+await rm(tempDirectory, { recursive: true });
 
 const project = (repo) => ({ repo });
 const items = [

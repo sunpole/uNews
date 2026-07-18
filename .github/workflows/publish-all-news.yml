@@ -16,7 +16,7 @@ on:
           - "true"
           - "false"
   schedule:
-    - cron: "7,17,27,37,47,57 * * * *"
+    - cron: "7,22,37,52 * * * *"
 
 permissions:
   contents: write
@@ -40,6 +40,7 @@ jobs:
           node-version: "22"
 
       - name: Test queue and source
+        if: ${{ github.event_name != 'schedule' }}
         run: npm test
 
       - name: Dry-run scan

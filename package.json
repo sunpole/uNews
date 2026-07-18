@@ -1,6 +1,6 @@
 {
   "name": "unews",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Telegram publisher for u-project patchnotes and development news.",
   "private": true,
   "type": "module",

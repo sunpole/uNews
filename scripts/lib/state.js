@@ -36,6 +36,31 @@ export async function writeJsonIfChanged(filePath, value, ignoredKeys = []) {
   return true;
 }
 
+export async function writeJsonIfChangedOrStale(
+  filePath,
+  value,
+  { ignoredKeys = [], timestampKey, maxAgeMs, now = Date.now() },
+) {
+  let current = null;
+  try {
+    current = JSON.parse(await readFile(filePath, "utf8"));
+  } catch {
+    await writeJsonAtomic(filePath, value);
+    return true;
+  }
+
+  const comparable = (input) => {
+    const copy = structuredClone(input);
+    for (const key of ignoredKeys) delete copy[key];
+    return JSON.stringify(copy);
+  };
+  const lastTimestamp = Date.parse(current[timestampKey] || "");
+  const isStale = !Number.isFinite(lastTimestamp) || now - lastTimestamp >= maxAgeMs;
+  if (comparable(current) === comparable(value) && !isStale) return false;
+  await writeJsonAtomic(filePath, value);
+  return true;
+}
+
 export function buildHealthSnapshot({ checkedAt, pendingCount, readyCount, blockedCount, selectedKey, dryRun }) {
   return {
     schema: 1,

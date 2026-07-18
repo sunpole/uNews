@@ -11,7 +11,14 @@ import {
 } from "./patchnote-policy.js";
 import { parsePatchnote, stripQuotes } from "./lib/front-matter.js";
 import { cooldownRemainingMs, isSemanticVersion, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
-import { buildHealthSnapshot, normalizePublishedState, selectedKeyAfterRun, writeJsonAtomic, writeJsonIfChanged } from "./lib/state.js";
+import {
+  buildHealthSnapshot,
+  normalizePublishedState,
+  selectedKeyAfterRun,
+  writeJsonAtomic,
+  writeJsonIfChanged,
+  writeJsonIfChangedOrStale,
+} from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
@@ -236,7 +243,11 @@ async function main() {
     selectedKey: selectedKeyAfterRun(queue.selected?.key, publishedThisRun),
     dryRun: false,
   });
-  await writeJsonAtomic("data/health.json", health);
+  await writeJsonIfChangedOrStale("data/health.json", health, {
+    ignoredKeys: ["last_successful_check_at"],
+    timestampKey: "last_successful_check_at",
+    maxAgeMs: 24 * 60 * 60 * 1000,
+  });
   await writeJsonIfChanged("data/errors.json", { schema: 1, updated_at: checkedAt, errors: reportedErrors }, ["updated_at"]);
 }
 
