@@ -64,7 +64,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          UNEWS_MAX_POSTS_PER_RUN: "20"
+          UNEWS_TELEGRAM_POST_INTERVAL_MS: "1200"
+          UNEWS_GIT_CHECKPOINT: "1"
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           before="$(git hash-object data/published.json)"
           npm run publish:all
           after="$(git hash-object data/published.json)"
