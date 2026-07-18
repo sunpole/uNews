@@ -19,7 +19,6 @@ on:
     - cron: "7 */4 * * *"
 
 permissions:
-  actions: write
   contents: write
   issues: write
 
@@ -104,10 +103,3 @@ jobs:
             gh issue close "$existing" --comment "Очередь снова проходит проверку без ошибок."
           fi
 
-      - name: Continue an active queue after the publication pause
-        if: ${{ success() && steps.publish.outputs.published == 'true' }}
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          sleep 600
-          gh workflow run publish-all-news.yml --ref main -f dry_run=false
