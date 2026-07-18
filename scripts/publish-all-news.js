@@ -333,7 +333,7 @@ async function main() {
     return;
   }
 
-  if (queue.selected) {
+  if (queue.selected && cooldownRemaining === 0) {
     const result = await publishPatchnote(queue.selected, { dryRun: false, token, chatId });
     const publishedAt = new Date().toISOString();
     publishedSet.add(queue.selected.key);
