@@ -9,6 +9,8 @@ import {
   buildPostUrl,
   extractTelegramMessageIds,
 } from "./patchnote-policy.js";
+import { parsePatchnote } from "./lib/front-matter.js";
+import { publishToTelegram } from "./lib/telegram-client.js";
 
 function printUsage() {
   console.log(`Usage:
@@ -82,53 +84,6 @@ function stripQuotes(value) {
   return value;
 }
 
-function parsePatchnote(source, filePath) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) {
-    throw new Error(`Patchnote has no YAML front matter: ${filePath}`);
-  }
-
-  return {
-    frontMatter: parseSimpleYaml(match[1]),
-    body: match[2].trim(),
-  };
-}
-
-function parseSimpleYaml(yamlSource) {
-  const result = {};
-  let currentArrayKey = null;
-
-  for (const rawLine of yamlSource.split(/\r?\n/)) {
-    if (!rawLine.trim() || rawLine.trimStart().startsWith("#")) continue;
-
-    const arrayItemMatch = rawLine.match(/^\s*-\s*(.+?)\s*$/);
-    if (arrayItemMatch && currentArrayKey) {
-      result[currentArrayKey].push(stripQuotes(arrayItemMatch[1].trim()));
-      continue;
-    }
-
-    const keyValueMatch = rawLine.match(/^([A-Za-z0-9_-]+):(?:\s*(.*))?$/);
-    if (!keyValueMatch) {
-      currentArrayKey = null;
-      continue;
-    }
-
-    const [, key, rawValue = ""] = keyValueMatch;
-    const value = rawValue.trim();
-
-    if (value === "") {
-      result[key] = [];
-      currentArrayKey = key;
-      continue;
-    }
-
-    result[key] = stripQuotes(value);
-    currentArrayKey = null;
-  }
-
-  return result;
-}
-
 async function assertFilesExist(filePaths) {
   for (const filePath of filePaths) {
     await access(filePath);
@@ -152,62 +107,6 @@ function getImageMimeType(filePath) {
   if (extension === ".webp") return "image/webp";
   if (extension === ".gif") return "image/gif";
   return "image/png";
-}
-
-async function sendMessage({ token, chatId, text }) {
-  const body = new URLSearchParams({
-    chat_id: chatId,
-    text,
-    disable_web_page_preview: "false",
-  });
-
-  return telegramRequest(token, "sendMessage", body);
-}
-
-async function sendPhoto({ token, chatId, imagePath, caption }) {
-  const form = new FormData();
-  form.append("chat_id", chatId);
-  form.append("photo", await createFileBlob(imagePath), path.basename(imagePath));
-  form.append("caption", caption);
-
-  return telegramRequest(token, "sendPhoto", form);
-}
-
-async function sendMediaGroup({ token, chatId, imagePaths, caption }) {
-  const form = new FormData();
-  const media = imagePaths.map((imagePath, index) => {
-    const mediaItem = {
-      type: "photo",
-      media: `attach://photo${index}`,
-    };
-
-    if (index === 0 && caption) mediaItem.caption = caption;
-    return mediaItem;
-  });
-
-  form.append("chat_id", chatId);
-  form.append("media", JSON.stringify(media));
-
-  for (const [index, imagePath] of imagePaths.entries()) {
-    form.append(`photo${index}`, await createFileBlob(imagePath), path.basename(imagePath));
-  }
-
-  return telegramRequest(token, "sendMediaGroup", form);
-}
-
-async function telegramRequest(token, method, body) {
-  const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-    method: "POST",
-    body,
-  });
-
-  const payload = await response.json().catch(() => null);
-  if (!response.ok || !payload?.ok) {
-    const description = payload?.description || response.statusText;
-    throw new Error(`Telegram ${method} failed: ${description}`);
-  }
-
-  return payload;
 }
 
 async function main() {
@@ -253,14 +152,18 @@ async function main() {
     throw new Error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID are required unless --dry-run is used.");
   }
 
-  let payload;
-  if (imagePaths.length > 1) {
-    payload = await sendMediaGroup({ token, chatId, imagePaths, caption: policy.captionText });
-  } else if (imagePaths.length === 1) {
-    payload = await sendPhoto({ token, chatId, imagePath: imagePaths[0], caption: policy.captionText });
-  } else {
-    payload = await sendMessage({ token, chatId, text: policy.messageText });
-  }
+  const mediaItems = imagePaths.map((imagePath) => ({
+    name: path.basename(imagePath),
+    loadBlob: () => createFileBlob(imagePath),
+  }));
+  const payload = await publishToTelegram({
+    token,
+    chatId,
+    method,
+    mediaItems,
+    captionText: policy.captionText,
+    messageText: policy.messageText,
+  });
 
   const messageIds = extractTelegramMessageIds(payload);
   console.log(

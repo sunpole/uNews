@@ -52,20 +52,23 @@
       <div class="card"><strong>Фиксация</strong>Идентификатор сообщения сразу сохраняется для защиты от дублей.</div>
     </div></section>
 
-    <section class="card"><div class="label">Версия 0.2.0</div><h2>Все публичные проекты, единое правило</h2><p class="lead">Приватные репозитории не сканируются. Ошибка в одном проекте блокирует его следующие версии, но не останавливает новости остальных проектов.</p><div class="actions"><a class="button secondary" href="docs/QUEUE_ARCHITECTURE.md">Архитектура очереди</a><a class="button secondary" href="UNEWS.md">Инструкция проектам</a></div></section>
+    <section class="card"><div class="label">Версия 0.2.1</div><h2>Все публичные проекты, единое правило</h2><p class="lead">Приватные репозитории не сканируются. Ошибка в одном проекте блокирует его следующие версии, но не останавливает новости остальных проектов.</p><div class="actions"><a class="button secondary" href="docs/QUEUE_ARCHITECTURE.md">Архитектура очереди</a><a class="button secondary" href="UNEWS.md">Инструкция проектам</a><a class="button secondary" href="docs/AUDIT_2026-07-18.md">Аудит 0.2.1</a></div></section>
   </main>
   <footer><div class="wrap">uNews / тыНовости · автоматическая история разработки проектов Антона</div></footer>
   <script>
     const text = (id, value) => document.getElementById(id).textContent = value;
-    Promise.all([
-      fetch('data/health.json', { cache: 'no-store' }).then(r => r.json()),
-      fetch('https://api.github.com/repos/sunpole/uNews/actions/workflows/publish-all-news.yml/runs?per_page=1').then(r => r.json())
-    ]).then(([health, runs]) => {
+    Promise.allSettled([
+      fetch('data/health.json', { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(); return r.json(); }),
+      fetch('https://api.github.com/repos/sunpole/uNews/actions/workflows/publish-all-news.yml/runs?per_page=1').then(r => { if (!r.ok) throw new Error(); return r.json(); })
+    ]).then(([healthResult, runsResult]) => {
+      const health = healthResult.status === 'fulfilled' ? healthResult.value : {};
+      const runs = runsResult.status === 'fulfilled' ? runsResult.value : {};
       const run = runs.workflow_runs?.[0];
-      text('last-check', run?.created_at ? new Date(run.created_at).toLocaleString('ru-RU') : 'нет данных');
-      text('pending', health.pending_count ?? 0);
-      text('errors', health.error_count ?? 0);
-    }).catch(() => text('last-check', 'данные временно недоступны'));
+      const checkedAt = run?.created_at || health.last_successful_check_at;
+      text('last-check', checkedAt ? new Date(checkedAt).toLocaleString('ru-RU') : 'нет данных');
+      text('pending', health.pending_count ?? '—');
+      text('errors', health.error_count ?? '—');
+    });
   </script>
 </body>
 </html>

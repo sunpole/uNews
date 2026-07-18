@@ -1,34 +1,28 @@
-name: Collect project news
+name: Diagnose public project news
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  collect:
+  diagnose:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-
     steps:
       - name: Checkout uNews
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          path: unews
+          node-version: "22"
 
-      - name: Checkout 500 Tower Defense
-        uses: actions/checkout@v6
-        with:
-          repository: sunpole/500
-          path: source-projects/500
+      - name: Test source and queue rules
+        run: npm test
 
-      - name: Show folders
-        run: |
-          echo "uNews files:"
-          ls -la unews
-
-          echo "500 project files:"
-          ls -la source-projects/500
-
-          echo "500 news files:"
-          ls -la source-projects/500/news || echo "Папка news в 500 пока не найдена"
+      - name: Scan every public project without publishing
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNEWS_DRY_RUN: "1"
+        run: npm run publish:all:check

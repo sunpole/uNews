@@ -113,12 +113,24 @@ function validatePatchnote({ frontMatter, body }) {
   const errors = [];
   const textForSafety = `${JSON.stringify(frontMatter)}\n${body}`;
 
-  for (const field of ["project", "series", "title", "version"]) {
+  for (const field of ["project", "series", "title", "version", "queued_at"]) {
     if (!frontMatter[field]) errors.push(`Missing required field: ${field}`);
   }
 
-  if (getImageNames(frontMatter).length === 0) {
+  if (frontMatter.queued_at && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(frontMatter.queued_at))) {
+    errors.push("Invalid queued_at: use exact UTC format YYYY-MM-DDTHH:mm:ssZ.");
+  } else if (frontMatter.queued_at && Number.isNaN(Date.parse(frontMatter.queued_at))) {
+    errors.push("Invalid queued_at: date does not exist.");
+  }
+
+  const imageNames = getImageNames(frontMatter);
+  if (imageNames.length === 0) {
     errors.push("Missing image/images: Telegram posts require a safe visual asset.");
+  }
+  for (const imageName of imageNames) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*\.(?:png|jpe?g|webp|gif)$/i.test(String(imageName)) || String(imageName).includes("..")) {
+      errors.push(`Unsafe image name: ${imageName}. Use a file name from the same news folder.`);
+    }
   }
 
   if (!buildLink(frontMatter)) {

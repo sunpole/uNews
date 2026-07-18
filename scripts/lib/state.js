@@ -1,9 +1,15 @@
 import { readFile, rename, writeFile } from "node:fs/promises";
 
 export function normalizePublishedState(state) {
+  if (!state || !Array.isArray(state.published) || !state.details || typeof state.details !== "object" || Array.isArray(state.details)) {
+    throw new Error("Invalid data/published.json structure; publishing stopped to prevent duplicates.");
+  }
+  if (state.published.some((key) => typeof key !== "string") || new Set(state.published).size !== state.published.length) {
+    throw new Error("Invalid data/published.json keys; publishing stopped to prevent duplicates.");
+  }
   return {
-    published: Array.isArray(state?.published) ? state.published : [],
-    details: state?.details && typeof state.details === "object" ? state.details : {},
+    published: state.published,
+    details: state.details,
   };
 }
 

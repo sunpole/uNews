@@ -6,7 +6,7 @@
 
 **uNews** — единая система публикации новостей, патчноутов и отчётов разработки по проектам Антона.
 
-Текущая версия: **0.2.0**. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
+Текущая версия: **0.2.1**. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
 
 Главная идея: каждый проект хранит свои новости в папке `news/`, а uNews забирает эти патчноуты и публикует их в Telegram-канал через бота.
 
@@ -121,6 +121,7 @@ npm run publish:projects:check -- "../500_td_game/news/2026-06-14-500td-v1-0-2-p
 npm run publish:all:check
 npm run diagnose:telegram
 npm run check:fixtures
+npm test
 ```
 
 Команды `npm run publish:projects` и `npm run publish:all` по умолчанию блокируют реальную отправку с локального компьютера. Они должны отправлять Telegram-посты только внутри GitHub Actions, где `GITHUB_ACTIONS=true`.
@@ -196,7 +197,17 @@ BOT_USERNAME=@uNewsDev_bot
 - состояние очереди отражается в `data/health.json` и на сайте проекта;
 - `data/published.json` сохраняет старый список `published` и может дополнительно хранить `details` с `message_ids`, `post_url`, `method` и `published_at` для новых публикаций.
 
-Workflow `Collect project news` остаётся вспомогательной диагностикой структуры проектов.
+Workflow `Diagnose public project news` проверяет ту же очередь всех публичных проектов без публикации. Отдельный `Quality checks` запускает синтаксические и поведенческие тесты при изменениях кода.
+
+## Модульная структура
+
+- `scripts/lib/github-client.js` — только обнаружение публичных репозиториев и чтение GitHub;
+- `scripts/lib/telegram-client.js` — только безопасная отправка в Telegram;
+- `scripts/lib/front-matter.js` — единый разбор патчноутов;
+- `scripts/lib/queue.js` — порядок версий, FIFO и пауза;
+- `scripts/lib/state.js` — строгая проверка и атомарная запись состояния;
+- `scripts/patchnote-policy.js` — правила содержимого и безопасности;
+- `scripts/publish-all-news.js` — координация одного запуска.
 
 Пост `https://t.me/uNewsLog/8` был опубликован до обязательного footer-rule, а затем исправлен maintenance-командой `editMessageCaption`: подпись обновлена ссылкой и хештегами без создания дубля.
 

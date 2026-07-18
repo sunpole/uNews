@@ -9,7 +9,7 @@ export function parseQueuedAt(value) {
 export function compareVersions(left, right) {
   const a = parseVersion(left);
   const b = parseVersion(right);
-  if (!a || !b) return String(left || "").localeCompare(String(right || ""), "en", { numeric: true });
+  if (!a || !b) return 0;
 
   for (let index = 0; index < 3; index += 1) {
     if (a.parts[index] !== b.parts[index]) return a.parts[index] - b.parts[index];
@@ -18,6 +18,18 @@ export function compareVersions(left, right) {
   if (!a.pre) return 1;
   if (!b.pre) return -1;
   return a.pre.localeCompare(b.pre, "en", { numeric: true });
+}
+
+export function isSemanticVersion(value) {
+  return Boolean(parseVersion(value));
+}
+
+export function cooldownRemainingMs(details, now = Date.now(), intervalMs = 9 * 60 * 1000) {
+  const timestamps = Object.values(details || {})
+    .map((entry) => Date.parse(entry?.published_at || ""))
+    .filter(Number.isFinite);
+  if (!timestamps.length) return 0;
+  return Math.max(0, Math.max(...timestamps) + intervalMs - now);
 }
 
 export function orderProjectQueue(items) {

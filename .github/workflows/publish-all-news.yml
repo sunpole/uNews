@@ -39,6 +39,9 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Test queue and source
+        run: npm test
+
       - name: Dry-run scan
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true' }}
         env:
