@@ -17,7 +17,7 @@ on:
           - "false"
   schedule:
     # uNews adaptive schedule — managed by scripts/lib/adaptive-schedule.js
-    - cron: "7,22,37,52 * * * *"
+    - cron: "7 */2 * * *"
 
 permissions:
   contents: write
