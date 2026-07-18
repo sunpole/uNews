@@ -25,7 +25,8 @@
     "sunpole/uSugar|main|news/2026-07-03-usugar-v1-6-9-command-mentions-hotfix.md",
     "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-0-family-daily-flow.md",
     "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-1-food-log-workflow.md",
-    "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-2-white-libre2-ocr.md"
+    "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-2-white-libre2-ocr.md",
+    "sunpole/udream|main|news/2026-07-18-udream-v3-1-0-repository-order.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -226,6 +227,15 @@
       ],
       "post_url": "https://t.me/uNewsLog/31",
       "published_at": "2026-07-04T06:27:11.125Z"
+    },
+    "sunpole/udream|main|news/2026-07-18-udream-v3-1-0-repository-order.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        32
+      ],
+      "post_url": "https://t.me/uNewsLog/32",
+      "queued_at": "2026-07-18T17:32:03.000Z",
+      "published_at": "2026-07-18T18:32:06.483Z"
     }
   }
 }
