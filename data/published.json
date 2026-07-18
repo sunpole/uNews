@@ -9,6 +9,7 @@
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-0-adaptive-schedule.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-1-sleep-and-drain.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-2-four-hour-schedule.md",
+    "sunpole/uNews|main|news/2026-07-18-unews-v0-3-3-batch-publishing.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
@@ -306,6 +307,15 @@
       "post_url": "https://t.me/uNewsLog/39",
       "queued_at": "2026-07-18T19:56:28.000Z",
       "published_at": "2026-07-18T20:14:29.400Z"
+    },
+    "sunpole/uNews|main|news/2026-07-18-unews-v0-3-3-batch-publishing.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        40
+      ],
+      "post_url": "https://t.me/uNewsLog/40",
+      "queued_at": "2026-07-18T20:10:35.000Z",
+      "published_at": "2026-07-18T20:15:32.787Z"
     }
   }
 }
