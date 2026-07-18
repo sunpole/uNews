@@ -65,6 +65,32 @@ export function selectQueueHead(items) {
   return { selected: readyHeads[0] || null, readyHeads, blocked };
 }
 
+
+export function selectQueueBatch(items, limit = 20) {
+  const numericLimit = Number.isFinite(Number(limit)) ? Math.max(1, Math.floor(Number(limit))) : 20;
+  let remaining = [...items];
+  const selected = [];
+  const blockedByKey = new Map();
+
+  while (selected.length < numericLimit) {
+    const queue = selectQueueHead(remaining);
+    for (const item of queue.blocked) blockedByKey.set(`${item.project}|${item.key}`, item);
+    if (!queue.selected) break;
+    selected.push(queue.selected);
+    remaining = remaining.filter((item) => item.key !== queue.selected.key);
+  }
+
+  const nextQueue = selectQueueHead(remaining);
+  for (const item of nextQueue.blocked) blockedByKey.set(`${item.project}|${item.key}`, item);
+  return {
+    selected,
+    blocked: [...blockedByKey.values()],
+    remaining,
+    next: nextQueue.selected,
+    readyProjectCount: nextQueue.readyHeads.length,
+  };
+}
+
 function parseVersion(value) {
   const match = String(value || "").trim().match(VERSION_RE);
   if (!match) return null;
