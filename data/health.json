@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "last_successful_check_at": "2026-07-18T18:32:06.484Z",
+  "last_successful_check_at": "2026-07-18T18:34:10.308Z",
   "pending_count": 1,
   "ready_project_count": 1,
   "error_count": 0,
-  "selected_key": "sunpole/udream|main|news/2026-07-18-udream-v3-1-0-repository-order.md",
+  "selected_key": "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
   "mode": "publish"
 }
