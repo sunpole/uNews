@@ -69,7 +69,6 @@ export function createGitHubClient({ token = "", apiBase = DEFAULT_API } = {}) {
         name: entry.name,
         path: entry.path,
         downloadUrl: entry.download_url,
-        revision: entry.sha,
         key: `${project.repo}|${branch}|${entry.path}`,
       }))
       .sort((a, b) => a.path.localeCompare(b.path));

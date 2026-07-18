@@ -21,7 +21,6 @@ import {
 } from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
-import { buildAdaptiveSchedule, normalizeSchedulerState, updateManagedWorkflowCron } from "./lib/adaptive-schedule.js";
 
 const MIN_PUBLISH_INTERVAL_MS = Number(process.env.UNEWS_MIN_PUBLISH_INTERVAL_MINUTES || 9) * 60 * 1000;
 
@@ -150,7 +149,6 @@ async function main() {
   const config = await loadJson("projects.json");
   const statePath = "data/published.json";
   const state = normalizePublishedState(await loadJson(statePath));
-  const schedulerState = normalizeSchedulerState(await loadJson("data/scheduler.json"));
   const publishedSet = new Set(state.published || []);
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -200,18 +198,7 @@ async function main() {
 
   const queue = selectQueueHead(inspected);
   const reportedErrors = [...scanErrors, ...queue.blocked];
-  const adaptiveSchedule = buildAdaptiveSchedule({
-    state: schedulerState,
-    candidates,
-    readyCount: queue.readyHeads.length,
-    now: Date.now(),
-    forceWake: process.env.UNEWS_WAKE_FAST === "1",
-  });
   console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Reported errors: ${reportedErrors.length}.`);
-  console.log(
-    `Adaptive schedule: ${adaptiveSchedule.state.tier} (${adaptiveSchedule.cron}); ` +
-      `new activity: ${adaptiveSchedule.activityDetected ? "yes" : "no"}.`,
-  );
   const cooldownRemaining = cooldownRemainingMs(state.details, Date.now(), MIN_PUBLISH_INTERVAL_MS);
 
   if (queue.selected && cooldownRemaining > 0) {
@@ -262,16 +249,6 @@ async function main() {
     maxAgeMs: 24 * 60 * 60 * 1000,
   });
   await writeJsonIfChanged("data/errors.json", { schema: 1, updated_at: checkedAt, errors: reportedErrors }, ["updated_at"]);
-  await writeJsonIfChangedOrStale("data/scheduler.json", adaptiveSchedule.state, {
-    ignoredKeys: ["last_check_at"],
-    timestampKey: "last_check_at",
-    maxAgeMs: 7 * 24 * 60 * 60 * 1000,
-  });
-  const cronChanged = await updateManagedWorkflowCron(
-    ".github/workflows/publish-all-news.yml",
-    adaptiveSchedule.cron,
-  );
-  if (cronChanged) console.log(`Updated managed workflow cron to ${adaptiveSchedule.cron}.`);
 }
 
 main().catch((error) => {
