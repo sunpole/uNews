@@ -986,9 +986,9 @@ queued_at: 2026-07-18T15:40:00Z
 
 Единый план интеграции для ИИ и программиста находится в [UNEWS.md](UNEWS.md), архитектура — в [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md).
 
-## 30. Экономное расписание v0.3.1
+## 30. Экономное расписание v0.3.2
 
-Плановая проверка выполняется один раз в сутки. После успешной публикации workflow ждёт десять минут и запускает следующий отдельный проход; цепочка прекращается, когда очередь пуста или заблокирована. Для срочной новости запустить `Publish all project news` вручную с `dry_run=false`.
+Плановая проверка выполняется раз в четыре часа на 7-й минуте (`7 */4 * * *`). После успешной публикации workflow ждёт десять минут и запускает следующий отдельный проход; цепочка прекращается, когда очередь пуста или заблокирована. Для срочной новости запустить `Publish all project news` вручную с `dry_run=false`.
 ## Russian publication and repair rule
 
 For Anton's project news, write Telegram-facing content in Russian by default. English technical words are allowed only as short terms, for example `OCR`, `WebApp`, `runtime`, `Settings`, and `Food Log`.
