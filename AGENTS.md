@@ -1009,3 +1009,8 @@ npm run edit:media -- -- --message-id <id> --patchnote <path> --key <published-k
 ```
 
 If Telegram refuses media replacement, repair only the caption with `npm run edit:caption` and report that the old image remains historical.
+
+
+## 31. Безопасность credentials v0.3.4
+
+Перед завершением задачи соблюдать [SECURITY.md](SECURITY.md). Не добавлять локальные environment-файлы, private keys, credential JSON, токены, пароли, QR-коды или приватные идентификаторы в Git, патчноуты, изображения, issues, commit messages и workflow inputs. Изменения в `.github/workflows/`, `scripts/` и `projects.json` должны проверяться владельцем согласно `.github/CODEOWNERS`.
