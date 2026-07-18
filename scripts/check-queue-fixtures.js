@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
+import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueBatch, selectQueueHead } from "./lib/queue.js";
 import { normalizePublishedState, selectedKeyAfterRun, writeJsonIfChangedOrStale } from "./lib/state.js";
 
 assert.equal(compareVersions("3.0.0", "3.1.0"), -1);
@@ -69,5 +69,21 @@ items[1].errors = ["broken patchnote"];
 const blocked = selectQueueHead(items);
 assert.equal(blocked.selected.key, "b-100", "a broken project must not block other projects");
 assert.equal(blocked.blocked[0].project, "sunpole/a");
+
+const batchItems = [
+  { key: "a-310", project: project("sunpole/a"), queuedAt: "2026-07-18T14:00:00.000Z", frontMatter: { version: "3.1.0" }, errors: [] },
+  { key: "a-300", project: project("sunpole/a"), queuedAt: "2026-07-18T15:00:00.000Z", frontMatter: { version: "3.0.0" }, errors: [] },
+  { key: "b-100", project: project("sunpole/b"), queuedAt: "2026-07-18T16:00:00.000Z", frontMatter: { version: "1.0.0" }, errors: [] },
+];
+assert.deepEqual(
+  selectQueueBatch(batchItems, 20).selected.map((item) => item.key),
+  ["a-300", "a-310", "b-100"],
+  "a batch must preserve project version order while draining every ready item",
+);
+assert.deepEqual(
+  selectQueueBatch(batchItems, 2).selected.map((item) => item.key),
+  ["a-300", "a-310"],
+  "a batch must honor its safety limit",
+);
 
 console.log("OK FIFO queue, version order and per-project blocking");
