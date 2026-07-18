@@ -2,6 +2,7 @@ export const TELEGRAM_CAPTION_LIMIT = 1024;
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
 
 const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "feature", "bugfix", "release"]);
+const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "docs", "ui", "feature", "warning", "idea", "roadmap", "report", "note"]);
 const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление)/i;
 const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i;
 const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
@@ -113,8 +114,12 @@ function validatePatchnote({ frontMatter, body }) {
   const errors = [];
   const textForSafety = `${JSON.stringify(frontMatter)}\n${body}`;
 
-  for (const field of ["project", "series", "title", "version", "queued_at"]) {
+  for (const field of ["type", "project", "series", "title", "version", "queued_at"]) {
     if (!frontMatter[field]) errors.push(`Missing required field: ${field}`);
+  }
+
+  if (frontMatter.type && !ALLOWED_TYPES.has(String(frontMatter.type).toLowerCase())) {
+    errors.push(`Unsupported type: ${frontMatter.type}`);
   }
 
   if (frontMatter.queued_at && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(String(frontMatter.queued_at))) {

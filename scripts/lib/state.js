@@ -47,3 +47,7 @@ export function buildHealthSnapshot({ checkedAt, pendingCount, readyCount, block
     mode: dryRun ? "dry-run" : "publish",
   };
 }
+
+export function selectedKeyAfterRun(selectedKey, publishedThisRun) {
+  return publishedThisRun ? null : selectedKey || null;
+}

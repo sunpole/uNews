@@ -2,7 +2,7 @@
 
 import assert from "node:assert/strict";
 import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
-import { normalizePublishedState } from "./lib/state.js";
+import { normalizePublishedState, selectedKeyAfterRun } from "./lib/state.js";
 
 assert.equal(compareVersions("3.0.0", "3.1.0"), -1);
 assert.equal(compareVersions("3.1.0", "3.0.0"), 1);
@@ -22,6 +22,8 @@ assert.throws(
   /duplicate/,
 );
 assert.deepEqual(normalizePublishedState({ published: [], details: {} }), { published: [], details: {} });
+assert.equal(selectedKeyAfterRun("project|news/item.md", false), "project|news/item.md");
+assert.equal(selectedKeyAfterRun("project|news/item.md", true), null, "published item must disappear from health selection");
 
 const project = (repo) => ({ repo });
 const items = [

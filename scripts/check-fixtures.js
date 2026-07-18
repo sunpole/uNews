@@ -16,6 +16,20 @@ const validUsugarFrontMatter = {
 
 const fixtures = [
   {
+    name: "missing type",
+    shouldPass: false,
+    frontMatter: { ...validUsugarFrontMatter, type: undefined },
+    body: "Короткий текст для Telegram:\nДокументационное обновление uSugar с русским текстом.",
+    expected: "Missing required field: type",
+  },
+  {
+    name: "unsupported type",
+    shouldPass: false,
+    frontMatter: { ...validUsugarFrontMatter, type: "unknown-type" },
+    body: "Короткий текст для Telegram:\nДокументационное обновление uSugar с русским текстом.",
+    expected: "Unsupported type",
+  },
+  {
     name: "missing queued_at",
     shouldPass: false,
     frontMatter: {

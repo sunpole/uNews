@@ -91,7 +91,7 @@ unews/
 
 Каждый патчноут должен иметь отдельный `.md`-файл.
 
-Рядом с `.md`-файлом обязательно желательно размещать изображение с таким же именем.
+Рядом с `.md`-файлом обязательно размещать изображение с безопасным именем без каталогов и `..`.
 
 Пример:
 
@@ -151,6 +151,7 @@ project: 500 Tower Defense
 series: 500td
 title: Баланс башен и первые волны
 version: 0.1.2
+queued_at: 2026-07-18T15:40:00Z
 repo_url: https://github.com/sunpole/500
 web_url: https://sunpole.github.io/uNews/previews/500td/0.1.2/
 branch: feature/500td-balance
@@ -165,7 +166,10 @@ type
 project
 series
 title
-image
+version
+queued_at
+repo_url или web_url
+image или images
 ```
 
 Если для патча уже есть веб-версия, обязательно указывать:
@@ -180,11 +184,13 @@ web_url
 branch
 ```
 
-Если известна версия, обязательно указывать:
+Версию обязательно указывать:
 
 ```text
 version
 ```
+
+`queued_at` обязательно задаётся точным UTC-временем в формате `YYYY-MM-DDTHH:mm:ssZ`. Значение без `Z`, без секунд или с локальным временем блокирует публикацию.
 
 ---
 
@@ -943,6 +949,8 @@ image: 2026-06-14-unews-weekly-report-idea.png
 патчноут лежит в news/
 имя файла написано латиницей
 YAML-блок заполнен
+version указан в семантическом формате
+queued_at указан в точном UTC-формате YYYY-MM-DDTHH:mm:ssZ
 project указан правильно
 series указан правильно
 type указан правильно

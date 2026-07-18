@@ -11,7 +11,7 @@ import {
 } from "./patchnote-policy.js";
 import { parsePatchnote, stripQuotes } from "./lib/front-matter.js";
 import { cooldownRemainingMs, isSemanticVersion, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
-import { buildHealthSnapshot, normalizePublishedState, writeJsonAtomic, writeJsonIfChanged } from "./lib/state.js";
+import { buildHealthSnapshot, normalizePublishedState, selectedKeyAfterRun, writeJsonAtomic, writeJsonIfChanged } from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
@@ -198,7 +198,8 @@ async function main() {
     console.log(`Queue head is waiting for the global publication pause: ${Math.ceil(cooldownRemaining / 1000)} seconds.`);
   }
 
-  if (queue.selected && cooldownRemaining === 0) {
+  const publishedThisRun = Boolean(queue.selected && cooldownRemaining === 0);
+  if (publishedThisRun) {
     console.log(`Queue head: ${queue.selected.key} (${queue.selected.queuedAt}, ${queue.selected.queuedAtSource}).`);
   }
   for (const blocked of reportedErrors) {
@@ -229,10 +230,10 @@ async function main() {
   const checkedAt = new Date().toISOString();
   const health = buildHealthSnapshot({
     checkedAt,
-    pendingCount: candidates.length - (queue.selected && cooldownRemaining === 0 ? 1 : 0),
-    readyCount: Math.max(0, queue.readyHeads.length - (queue.selected && cooldownRemaining === 0 ? 1 : 0)),
+    pendingCount: candidates.length - (publishedThisRun ? 1 : 0),
+    readyCount: Math.max(0, queue.readyHeads.length - (publishedThisRun ? 1 : 0)),
     blockedCount: reportedErrors.length,
-    selectedKey: queue.selected?.key,
+    selectedKey: selectedKeyAfterRun(queue.selected?.key, publishedThisRun),
     dryRun: false,
   });
   await writeJsonAtomic("data/health.json", health);
