@@ -81,7 +81,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           title="uNews queue requires attention"
-          existing="$(gh issue list --state open --search \"$title in:title\" --json number --jq '.[0].number // empty')"
+          existing="$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')"
           error_count="$(node -e \"const fs=require('fs'); try { const x=JSON.parse(fs.readFileSync('data/errors.json')); console.log(x.errors?.length || 0); } catch { console.log(0); }\")"
 
           if [ "${{ job.status }}" != "success" ] || [ "$error_count" -gt 0 ]; then
