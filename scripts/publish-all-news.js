@@ -3,6 +3,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
+import { setTimeout as delay } from "node:timers/promises";
 import {
   assertPublicationPolicy,
   assertRealPublishAllowed,
@@ -10,19 +11,20 @@ import {
   extractTelegramMessageIds,
 } from "./patchnote-policy.js";
 import { parsePatchnote, stripQuotes } from "./lib/front-matter.js";
-import { cooldownRemainingMs, isSemanticVersion, parseQueuedAt, selectQueueHead } from "./lib/queue.js";
+import { cooldownRemainingMs, isSemanticVersion, parseQueuedAt, selectQueueBatch, selectQueueHead } from "./lib/queue.js";
 import {
   buildHealthSnapshot,
   normalizePublishedState,
-  selectedKeyAfterRun,
   writeJsonAtomic,
   writeJsonIfChanged,
   writeJsonIfChangedOrStale,
 } from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
+import { checkpointPublishedState } from "./lib/git-checkpoint.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
-const MIN_PUBLISH_INTERVAL_MS = Number(process.env.UNEWS_MIN_PUBLISH_INTERVAL_MINUTES || 9) * 60 * 1000;
+const MAX_POSTS_PER_RUN = Math.max(1, Math.min(20, Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 20)));
+const TELEGRAM_POST_INTERVAL_MS = Math.max(1100, Number(process.env.UNEWS_TELEGRAM_POST_INTERVAL_MS || 1200));
 
 function parseArgs(argv) {
   return {
@@ -196,51 +198,61 @@ async function main() {
     }
   }
 
-  const queue = selectQueueHead(inspected);
-  const reportedErrors = [...scanErrors, ...queue.blocked];
-  console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Reported errors: ${reportedErrors.length}.`);
-  const cooldownRemaining = cooldownRemainingMs(state.details, Date.now(), MIN_PUBLISH_INTERVAL_MS);
-
-  if (queue.selected && cooldownRemaining > 0) {
-    console.log(`Queue head is waiting for the global publication pause: ${Math.ceil(cooldownRemaining / 1000)} seconds.`);
-  }
-
-  const publishedThisRun = Boolean(queue.selected && cooldownRemaining === 0);
-  if (publishedThisRun) {
-    console.log(`Queue head: ${queue.selected.key} (${queue.selected.queuedAt}, ${queue.selected.queuedAtSource}).`);
-  }
+  const batch = selectQueueBatch(inspected, MAX_POSTS_PER_RUN);
+  const reportedErrors = [...scanErrors, ...batch.blocked];
+  console.log(
+    `New patchnotes found: ${candidates.length}. Ready in this batch: ${batch.selected.length}. Reported errors: ${reportedErrors.length}.`,
+  );
   for (const blocked of reportedErrors) {
     console.error(`Blocked ${blocked.project}: ${blocked.key}: ${blocked.errors.join("; ")}`);
   }
 
   if (args.dryRun) {
-    if (queue.selected) await publishPatchnote(queue.selected, { dryRun: true, token, chatId });
+    console.log(`Would publish ${batch.selected.length} item(s) in FIFO order (limit: ${MAX_POSTS_PER_RUN}).`);
+    for (const patchnote of batch.selected) {
+      await publishPatchnote(patchnote, { dryRun: true, token, chatId });
+    }
     return;
   }
 
-  if (queue.selected && cooldownRemaining === 0) {
-    const result = await publishPatchnote(queue.selected, { dryRun: false, token, chatId });
+  let publishedCount = 0;
+  if (batch.selected.length > 0) {
+    const firstPause = cooldownRemainingMs(state.details, Date.now(), TELEGRAM_POST_INTERVAL_MS);
+    if (firstPause > 0) {
+      console.log(`Waiting ${firstPause} ms before the first Telegram post to respect the single-chat limit.`);
+      await delay(firstPause);
+    }
+  }
+
+  for (const patchnote of batch.selected) {
+    if (publishedCount > 0) await delay(TELEGRAM_POST_INTERVAL_MS);
+    console.log(`Batch item ${publishedCount + 1}/${batch.selected.length}: ${patchnote.key}.`);
+    const result = await publishPatchnote(patchnote, { dryRun: false, token, chatId });
     const publishedAt = new Date().toISOString();
-    publishedSet.add(queue.selected.key);
+    publishedSet.add(patchnote.key);
     state.published = [...publishedSet].sort();
-    state.details[queue.selected.key] = {
+    state.details[patchnote.key] = {
       method: result.method,
       message_ids: result.messageIds,
       post_url: result.postUrl,
-      queued_at: queue.selected.queuedAt,
+      queued_at: patchnote.queuedAt,
       published_at: publishedAt,
     };
     await writeJsonAtomic(statePath, state);
-    console.log(`Immediately recorded published state: ${queue.selected.key}.`);
+    checkpointPublishedState(patchnote.key);
+    publishedCount += 1;
+    console.log(`Immediately recorded published state: ${patchnote.key}.`);
   }
 
+  const remainingItems = inspected.filter((item) => !publishedSet.has(item.key));
+  const remainingQueue = selectQueueHead(remainingItems);
   const checkedAt = new Date().toISOString();
   const health = buildHealthSnapshot({
     checkedAt,
-    pendingCount: candidates.length - (publishedThisRun ? 1 : 0),
-    readyCount: Math.max(0, queue.readyHeads.length - (publishedThisRun ? 1 : 0)),
+    pendingCount: Math.max(0, candidates.length - publishedCount),
+    readyCount: remainingQueue.readyHeads.length,
     blockedCount: reportedErrors.length,
-    selectedKey: selectedKeyAfterRun(queue.selected?.key, publishedThisRun),
+    selectedKey: remainingQueue.selected?.key || null,
     dryRun: false,
   });
   await writeJsonIfChangedOrStale("data/health.json", health, {
