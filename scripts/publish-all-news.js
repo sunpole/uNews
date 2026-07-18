@@ -271,12 +271,20 @@ async function main() {
   console.log(`Projects to scan: ${projects.length}`);
 
   const candidates = [];
+  const scanErrors = [];
   for (const project of projects) {
     try {
       const files = await listNewsFiles(project);
       for (const file of files) if (!publishedSet.has(file.key)) candidates.push(file);
     } catch (error) {
       console.log(`Skip ${project.repo}: ${error.message}`);
+      scanErrors.push({
+        kind: "project-scan",
+        project: project.repo,
+        key: null,
+        version: null,
+        errors: [`Project scan failed: ${error.message}`],
+      });
     }
   }
 
@@ -294,11 +302,12 @@ async function main() {
   }
 
   const queue = selectQueueHead(inspected);
-  console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Blocked projects: ${queue.blocked.length}.`);
+  const reportedErrors = [...scanErrors, ...queue.blocked];
+  console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Reported errors: ${reportedErrors.length}.`);
   if (queue.selected) {
     console.log(`Queue head: ${queue.selected.key} (${queue.selected.queuedAt}, ${queue.selected.queuedAtSource}).`);
   }
-  for (const blocked of queue.blocked) {
+  for (const blocked of reportedErrors) {
     console.error(`Blocked ${blocked.project}: ${blocked.key}: ${blocked.errors.join("; ")}`);
   }
 
@@ -328,12 +337,12 @@ async function main() {
     checkedAt,
     pendingCount: candidates.length - (queue.selected ? 1 : 0),
     readyCount: Math.max(0, queue.readyHeads.length - (queue.selected ? 1 : 0)),
-    blockedCount: queue.blocked.length,
+    blockedCount: reportedErrors.length,
     selectedKey: queue.selected?.key,
     dryRun: false,
   });
   await writeJsonIfChanged("data/health.json", health, ["last_successful_check_at"]);
-  await writeJsonIfChanged("data/errors.json", { schema: 1, updated_at: checkedAt, errors: queue.blocked }, ["updated_at"]);
+  await writeJsonIfChanged("data/errors.json", { schema: 1, updated_at: checkedAt, errors: reportedErrors }, ["updated_at"]);
 }
 
 main().catch((error) => {
