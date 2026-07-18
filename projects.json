@@ -3,9 +3,7 @@
   "mode": "auto-discover-public-repositories",
   "newsDir": "news",
   "defaultBranchFallback": "main",
-  "exclude": [
-    "sunpole/uNews"
-  ],
+  "exclude": [],
   "manualProjects": [
     {
       "name": "500 Tower Defense",

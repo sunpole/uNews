@@ -49,14 +49,14 @@ export function buildPublicationPolicy({ frontMatter, body }) {
       errors,
       imageNames: getImageNames(frontMatter),
       link: buildLink(frontMatter),
-      hashtags: getProjectHashtags(frontMatter.project),
+      hashtags: getProjectHashtags(frontMatter.project, frontMatter.series),
     };
   }
 
   const sourceText = getSourceTelegramText(frontMatter, body);
   const mainText = ensureRequiredWording(sourceText, frontMatter.type);
   const link = buildLink(frontMatter);
-  const hashtags = getProjectHashtags(frontMatter.project);
+  const hashtags = getProjectHashtags(frontMatter.project, frontMatter.series);
   const footer = `Ссылка: ${link}\n\n${hashtags}`;
 
   const caption = limitWithFooter(mainText, footer, TELEGRAM_CAPTION_LIMIT);
@@ -125,8 +125,8 @@ function validatePatchnote({ frontMatter, body }) {
     errors.push("Missing usable link: add web_url or repo_url.");
   }
 
-  if (frontMatter.project && !getProjectHashtags(frontMatter.project)) {
-    errors.push(`Unknown hashtag mapping for project: ${frontMatter.project}`);
+  if (frontMatter.project && !getProjectHashtags(frontMatter.project, frontMatter.series)) {
+    errors.push(`Cannot build hashtags for project: ${frontMatter.project}. Add a safe series value.`);
   }
 
   const secretRisk = findSecretRisk(textForSafety);
@@ -175,8 +175,11 @@ function encodeBranchPath(branch) {
     .join("/");
 }
 
-function getProjectHashtags(project) {
-  return HASHTAG_MAPPING.get(project) || null;
+function getProjectHashtags(project, series) {
+  const mapped = HASHTAG_MAPPING.get(project);
+  if (mapped) return mapped;
+  const genericTag = String(series || "").replace(/[^A-Za-z0-9_]/g, "");
+  return genericTag ? `#${genericTag} #uNews #тыНовости #Sunpole` : null;
 }
 
 function ensureRequiredWording(text, type) {

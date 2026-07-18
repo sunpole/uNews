@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="uNews / тыНовости — автоматическая очередь публикаций проектов Антона в Telegram.">
+  <title>uNews / тыНовости</title>
+  <style>
+    :root { color-scheme: dark; --bg:#061126; --panel:#0c1c38cc; --line:#1e4f83; --text:#f5f9ff; --muted:#a9bdd8; --cyan:#45d8ff; --amber:#ffbd67; }
+    * { box-sizing: border-box; }
+    body { margin:0; min-height:100vh; font:16px/1.55 Inter,system-ui,sans-serif; color:var(--text); background:radial-gradient(circle at 70% 0,#153b70 0,transparent 38%),var(--bg); }
+    a { color:var(--cyan); }
+    .wrap { width:min(1120px,calc(100% - 32px)); margin:auto; }
+    header { padding:72px 0 40px; display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:42px; }
+    h1 { margin:0 0 14px; font-size:clamp(48px,8vw,92px); line-height:.95; letter-spacing:-.055em; }
+    h1 span { display:block; margin-top:18px; color:var(--cyan); font-size:.34em; letter-spacing:.02em; }
+    .lead { max-width:660px; color:var(--muted); font-size:clamp(18px,2.2vw,24px); }
+    .hero { width:100%; border-radius:28px; border:1px solid #4fcfff66; box-shadow:0 24px 80px #0008; }
+    .status { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0 54px; }
+    .card { padding:22px; background:var(--panel); border:1px solid var(--line); border-radius:20px; backdrop-filter:blur(14px); }
+    .label { color:var(--muted); font-size:13px; text-transform:uppercase; letter-spacing:.12em; }
+    .value { margin-top:8px; font-size:clamp(24px,4vw,38px); font-weight:800; }
+    section { margin:54px 0; }
+    h2 { font-size:clamp(30px,5vw,48px); letter-spacing:-.035em; }
+    .flow { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; counter-reset:step; }
+    .flow .card::before { counter-increment:step; content:counter(step); display:grid; place-items:center; width:34px; height:34px; margin-bottom:24px; border-radius:50%; color:#041125; background:var(--cyan); font-weight:900; }
+    .flow strong { display:block; margin-bottom:8px; font-size:20px; }
+    .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+    .button { padding:12px 18px; border-radius:12px; text-decoration:none; font-weight:750; color:#061126; background:var(--cyan); }
+    .button.secondary { color:var(--text); background:transparent; border:1px solid var(--line); }
+    footer { padding:32px 0 60px; color:var(--muted); border-top:1px solid var(--line); }
+    @media (max-width:760px) { header { grid-template-columns:1fr; padding-top:44px; } .status,.flow { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div><h1>uNews<span>тыНовости · очередь проектов</span></h1><p class="lead">Изменение завершено — дальше всё автоматически. uNews находит патчноут, проверяет его и отправляет одну новость в Telegram в правильном порядке.</p><div class="actions"><a class="button" href="https://t.me/uNewsLog">Открыть Telegram</a><a class="button secondary" href="https://github.com/sunpole/uNews">GitHub проекта</a></div></div>
+      <img class="hero" src="news/2026-07-18-unews-v0-2-0-fifo-queue.jpg" alt="Карточки новостей проходят по очереди к публикации в Telegram">
+    </header>
+
+    <div class="status" aria-live="polite">
+      <div class="card"><div class="label">Последняя проверка</div><div class="value" id="last-check">загрузка…</div></div>
+      <div class="card"><div class="label">Ожидают</div><div class="value" id="pending">—</div></div>
+      <div class="card"><div class="label">Ошибки</div><div class="value" id="errors">—</div></div>
+    </div>
+
+    <section><h2>Как работает очередь</h2><div class="flow">
+      <div class="card"><strong>Патчноут</strong>Проект добавляет Markdown и изображение в папку <code>news/</code>.</div>
+      <div class="card"><strong>Проверка</strong>uNews проверяет текст, ссылку, картинку, секреты и версию.</div>
+      <div class="card"><strong>Один пост</strong>За запуск выходит только самая старая готовая новость.</div>
+      <div class="card"><strong>Фиксация</strong>Идентификатор сообщения сразу сохраняется для защиты от дублей.</div>
+    </div></section>
+
+    <section class="card"><div class="label">Версия 0.2.0</div><h2>Все публичные проекты, единое правило</h2><p class="lead">Приватные репозитории не сканируются. Ошибка в одном проекте блокирует его следующие версии, но не останавливает новости остальных проектов.</p><div class="actions"><a class="button secondary" href="docs/QUEUE_ARCHITECTURE.md">Архитектура очереди</a><a class="button secondary" href="UNEWS.md">Инструкция проектам</a></div></section>
+  </main>
+  <footer><div class="wrap">uNews / тыНовости · автоматическая история разработки проектов Антона</div></footer>
+  <script>
+    const text = (id, value) => document.getElementById(id).textContent = value;
+    Promise.all([
+      fetch('data/health.json', { cache: 'no-store' }).then(r => r.json()),
+      fetch('https://api.github.com/repos/sunpole/uNews/actions/workflows/publish-all-news.yml/runs?per_page=1').then(r => r.json())
+    ]).then(([health, runs]) => {
+      const run = runs.workflow_runs?.[0];
+      text('last-check', run?.created_at ? new Date(run.created_at).toLocaleString('ru-RU') : 'нет данных');
+      text('pending', health.pending_count ?? 0);
+      text('errors', health.error_count ?? 0);
+    }).catch(() => text('last-check', 'данные временно недоступны'));
+  </script>
+</body>
+</html>

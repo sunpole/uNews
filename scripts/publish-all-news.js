@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import {
@@ -9,9 +9,11 @@ import {
   buildPostUrl,
   extractTelegramMessageIds,
 } from "./patchnote-policy.js";
+import { parsePatchnote, stripQuotes } from "./lib/front-matter.js";
+import { parseQueuedAt, selectQueueHead } from "./lib/queue.js";
+import { buildHealthSnapshot, normalizePublishedState, writeJsonAtomic, writeJsonIfChanged } from "./lib/state.js";
 
 const OWNER_API = "https://api.github.com";
-const MAX_POSTS_PER_RUN = Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 10);
 
 function parseArgs(argv) {
   return {
@@ -42,54 +44,6 @@ async function loadJson(filePath, fallback) {
   } catch {
     return fallback;
   }
-}
-
-function normalizePublishedState(state) {
-  return {
-    published: Array.isArray(state.published) ? state.published : [],
-    details: state.details && typeof state.details === "object" ? state.details : {},
-  };
-}
-
-function parsePatchnote(source, label) {
-  const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-  if (!match) throw new Error(`Patchnote has no YAML front matter: ${label}`);
-  return { frontMatter: parseSimpleYaml(match[1]), body: match[2].trim() };
-}
-
-function parseSimpleYaml(yamlSource) {
-  const result = {};
-  let currentArrayKey = null;
-  for (const rawLine of yamlSource.split(/\r?\n/)) {
-    if (!rawLine.trim() || rawLine.trimStart().startsWith("#")) continue;
-    const item = rawLine.match(/^\s*-\s*(.+?)\s*$/);
-    if (item && currentArrayKey) {
-      result[currentArrayKey].push(stripQuotes(item[1].trim()));
-      continue;
-    }
-    const kv = rawLine.match(/^([A-Za-z0-9_-]+):(?:\s*(.*))?$/);
-    if (!kv) {
-      currentArrayKey = null;
-      continue;
-    }
-    const key = kv[1];
-    const value = (kv[2] || "").trim();
-    if (!value) {
-      result[key] = [];
-      currentArrayKey = key;
-    } else {
-      result[key] = stripQuotes(value);
-      currentArrayKey = null;
-    }
-  }
-  return result;
-}
-
-function stripQuotes(value) {
-  if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-    return value.slice(1, -1);
-  }
-  return value;
 }
 
 function githubHeaders() {
@@ -168,8 +122,25 @@ async function listNewsFiles(project) {
 
 async function loadPatchnote(newsFile) {
   const markdown = await githubGetText(newsFile.downloadUrl);
+  if (markdown === null) throw new Error(`Patchnote download failed: ${newsFile.key}`);
   const parsed = parsePatchnote(markdown, newsFile.key);
   return { ...newsFile, markdown, ...parsed };
+}
+
+async function resolveQueuedAt(patchnote) {
+  const explicit = parseQueuedAt(patchnote.frontMatter.queued_at);
+  if (patchnote.frontMatter.queued_at && !explicit) {
+    throw new Error(`Invalid queued_at: ${patchnote.frontMatter.queued_at}`);
+  }
+  if (explicit) return { queuedAt: explicit, source: "front-matter" };
+
+  const [owner, repo] = patchnote.project.repo.split("/");
+  const branch = patchnote.project.branch || "main";
+  const query = new URLSearchParams({ path: patchnote.path, sha: branch, per_page: "1" });
+  const commits = await githubGetJson(`${OWNER_API}/repos/${owner}/${repo}/commits?${query}`);
+  const fallback = parseQueuedAt(commits?.[0]?.commit?.committer?.date || commits?.[0]?.commit?.author?.date);
+  if (!fallback) throw new Error("Missing queued_at and GitHub commit time fallback is unavailable.");
+  return { queuedAt: fallback, source: "github-commit-fallback" };
 }
 
 function imageDownloadUrl(newsFile, imageName) {
@@ -187,6 +158,14 @@ async function fetchImageBlob(url) {
   const response = await fetch(url);
   if (!response.ok) throw new Error(`Image download failed ${response.status}: ${url}`);
   return new Blob([await response.arrayBuffer()], { type: response.headers.get("content-type") || "image/png" });
+}
+
+async function assertRemoteImagesExist(patchnote, imageNames) {
+  for (const imageName of imageNames) {
+    const url = imageDownloadUrl(patchnote, imageName);
+    const response = await fetch(url, { method: "HEAD" });
+    if (!response.ok) throw new Error(`Image is not available (${response.status}): ${imageName}`);
+  }
 }
 
 async function sendMessage({ token, chatId, text }) {
@@ -234,6 +213,7 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
     label: patchnote.key,
   });
   const mediaItems = policy.imageNames.map((name) => ({ name, url: imageDownloadUrl(patchnote, name) }));
+  await assertRemoteImagesExist(patchnote, policy.imageNames);
   const method = mediaItems.length > 1 ? "sendMediaGroup" : mediaItems.length === 1 ? "sendPhoto" : "sendMessage";
 
   console.log(`${dryRun ? "Would publish" : "Publishing"}: ${patchnote.key} via ${method}`);
@@ -300,30 +280,60 @@ async function main() {
     }
   }
 
-  candidates.sort((a, b) => a.key.localeCompare(b.key));
-  const toPublish = candidates.slice(0, MAX_POSTS_PER_RUN);
-  console.log(`New patchnotes found: ${candidates.length}. This run limit: ${toPublish.length}.`);
-
-  const newlyPublished = [];
-  for (const file of toPublish) {
-    const patchnote = await loadPatchnote(file);
-    const result = await publishPatchnote(patchnote, { dryRun: args.dryRun, token, chatId });
-    if (result.published) {
-      newlyPublished.push(file.key);
-      state.details[file.key] = {
-        method: result.method,
-        message_ids: result.messageIds,
-        post_url: result.postUrl,
-        published_at: new Date().toISOString(),
-      };
+  const inspected = [];
+  for (const file of candidates) {
+    try {
+      const patchnote = await loadPatchnote(file);
+      const queueTime = await resolveQueuedAt(patchnote);
+      const policy = assertPublicationPolicy({ frontMatter: patchnote.frontMatter, body: patchnote.body, label: patchnote.key });
+      await assertRemoteImagesExist(patchnote, policy.imageNames);
+      inspected.push({ ...patchnote, queuedAt: queueTime.queuedAt, queuedAtSource: queueTime.source, errors: [] });
+    } catch (error) {
+      inspected.push({ ...file, frontMatter: {}, queuedAt: "9999-12-31T23:59:59.999Z", errors: [error.message] });
     }
   }
 
-  if (!args.dryRun && newlyPublished.length > 0) {
-    state.published = [...publishedSet, ...newlyPublished].sort();
-    await writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`, "utf8");
-    console.log(`Updated ${statePath}: ${newlyPublished.length} new entries.`);
+  const queue = selectQueueHead(inspected);
+  console.log(`New patchnotes found: ${candidates.length}. Ready projects: ${queue.readyHeads.length}. Blocked projects: ${queue.blocked.length}.`);
+  if (queue.selected) {
+    console.log(`Queue head: ${queue.selected.key} (${queue.selected.queuedAt}, ${queue.selected.queuedAtSource}).`);
   }
+  for (const blocked of queue.blocked) {
+    console.error(`Blocked ${blocked.project}: ${blocked.key}: ${blocked.errors.join("; ")}`);
+  }
+
+  if (args.dryRun) {
+    if (queue.selected) await publishPatchnote(queue.selected, { dryRun: true, token, chatId });
+    return;
+  }
+
+  if (queue.selected) {
+    const result = await publishPatchnote(queue.selected, { dryRun: false, token, chatId });
+    const publishedAt = new Date().toISOString();
+    publishedSet.add(queue.selected.key);
+    state.published = [...publishedSet].sort();
+    state.details[queue.selected.key] = {
+      method: result.method,
+      message_ids: result.messageIds,
+      post_url: result.postUrl,
+      queued_at: queue.selected.queuedAt,
+      published_at: publishedAt,
+    };
+    await writeJsonAtomic(statePath, state);
+    console.log(`Immediately recorded published state: ${queue.selected.key}.`);
+  }
+
+  const checkedAt = new Date().toISOString();
+  const health = buildHealthSnapshot({
+    checkedAt,
+    pendingCount: candidates.length - (queue.selected ? 1 : 0),
+    readyCount: Math.max(0, queue.readyHeads.length - (queue.selected ? 1 : 0)),
+    blockedCount: queue.blocked.length,
+    selectedKey: queue.selected?.key,
+    dryRun: false,
+  });
+  await writeJsonIfChanged("data/health.json", health, ["last_successful_check_at"]);
+  await writeJsonIfChanged("data/errors.json", { schema: 1, updated_at: checkedAt, errors: queue.blocked }, ["updated_at"]);
 }
 
 main().catch((error) => {

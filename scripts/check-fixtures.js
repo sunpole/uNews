@@ -93,8 +93,8 @@ const fixtures = [
     expected: "Missing required field: version",
   },
   {
-    name: "unknown project mapping",
-    shouldPass: false,
+    name: "generic public project mapping",
+    shouldPass: true,
     frontMatter: {
       type: "patch",
       project: "Unknown Project",
@@ -105,7 +105,11 @@ const fixtures = [
       image: "safe.png",
     },
     body: "Short text.",
-    expected: "Unknown hashtag mapping",
+    assert(policy) {
+      if (!policy.captionText.includes("#unknown #uNews #тыНовости #Sunpole")) {
+        throw new Error("generic project caption has no generated hashtags");
+      }
+    },
   },
   {
     name: "missing link",

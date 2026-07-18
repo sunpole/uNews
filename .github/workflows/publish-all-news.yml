@@ -12,10 +12,11 @@ on:
           - "true"
           - "false"
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "7,17,27,37,47,57 * * * *"
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: unews-publish-all-news
@@ -41,6 +42,13 @@ jobs:
           UNEWS_DRY_RUN: "1"
         run: npm run publish:all:check
 
+      - name: Verify Telegram credentials
+        if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: npm run diagnose:telegram
+
       - name: Publish new patchnotes
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
         env:
@@ -52,13 +60,30 @@ jobs:
       - name: Commit published state
         if: ${{ github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
         run: |
-          if git diff --quiet data/published.json; then
+          if git diff --quiet -- data/; then
             echo "No published state changes."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/published.json
-          git commit -m "Update published news state"
+          git add data/
+          git commit -m "Update uNews queue state"
           git push
+
+      - name: Report or close queue alert
+        if: ${{ always() && (github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          title="uNews queue requires attention"
+          existing="$(gh issue list --state open --search \"$title in:title\" --json number --jq '.[0].number // empty')"
+          error_count="$(node -e \"const fs=require('fs'); try { const x=JSON.parse(fs.readFileSync('data/errors.json')); console.log(x.errors?.length || 0); } catch { console.log(0); }\")"
+
+          if [ "${{ job.status }}" != "success" ] || [ "$error_count" -gt 0 ]; then
+            if [ -z "$existing" ]; then
+              gh issue create --title "$title" --body "Автоматическая очередь uNews обнаружила ошибку. Откройте последний запуск workflow Publish all project news и файл data/errors.json. Секреты в отчёт не включаются."
+            fi
+          elif [ -n "$existing" ]; then
+            gh issue close "$existing" --comment "Очередь снова проходит проверку без ошибок."
+          fi
