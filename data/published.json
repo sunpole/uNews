@@ -3,6 +3,7 @@
     "sunpole/500|main|news/2026-06-14-500td-v1-0-2-pages-preview.md",
     "sunpole/500|main|news/2026-06-15-500td-test-autopublish.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
+    "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
@@ -246,6 +247,15 @@
       "post_url": "https://t.me/uNewsLog/33",
       "queued_at": "2026-07-18T18:09:08.000Z",
       "published_at": "2026-07-18T18:34:10.307Z"
+    },
+    "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        34
+      ],
+      "post_url": "https://t.me/uNewsLog/34",
+      "queued_at": "2026-07-18T19:02:11.000Z",
+      "published_at": "2026-07-18T19:07:14.754Z"
     }
   }
 }

@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "last_successful_check_at": "2026-07-18T18:36:52.696Z",
+  "last_successful_check_at": "2026-07-18T19:07:14.755Z",
   "pending_count": 0,
   "ready_project_count": 0,
   "error_count": 0,
-  "selected_key": null,
+  "selected_key": "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
   "mode": "publish"
 }
