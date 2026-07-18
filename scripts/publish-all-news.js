@@ -115,7 +115,6 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
         captionWasTruncated: policy.captionWasTruncated,
         link: policy.link,
         hashtags: policy.hashtags,
-        captionPreview: policy.captionText,
       },
       null,
       2,
