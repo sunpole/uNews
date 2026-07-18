@@ -1,0 +1,5 @@
+# Sensitive automation and publishing code requires review by the repository owner.
+* @sunpole
+/.github/workflows/ @sunpole
+/scripts/ @sunpole
+/projects.json @sunpole
