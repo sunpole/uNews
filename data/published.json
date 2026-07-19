@@ -35,7 +35,8 @@
     "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-0-family-daily-flow.md",
     "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-1-food-log-workflow.md",
     "sunpole/uSugar|main|news/2026-07-04-usugar-v1-7-2-white-libre2-ocr.md",
-    "sunpole/udream|main|news/2026-07-18-udream-v3-1-0-repository-order.md"
+    "sunpole/udream|main|news/2026-07-18-udream-v3-1-0-repository-order.md",
+    "sunpole/udream|main|news/2026-07-18-udream-v3-1-1-unews-queue.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -326,6 +327,15 @@
       "post_url": "https://t.me/uNewsLog/41",
       "queued_at": "2026-07-18T20:24:31.000Z",
       "published_at": "2026-07-18T20:26:31.784Z"
+    },
+    "sunpole/udream|main|news/2026-07-18-udream-v3-1-1-unews-queue.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        42
+      ],
+      "post_url": "https://t.me/uNewsLog/42",
+      "queued_at": "2026-07-18T21:59:29.000Z",
+      "published_at": "2026-07-19T03:39:59.135Z"
     }
   }
 }
