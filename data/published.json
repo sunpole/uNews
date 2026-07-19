@@ -40,7 +40,8 @@
     "sunpole/udream|main|news/2026-07-19-udream-m4-safe-presentation.md",
     "sunpole/udream|main|news/2026-07-19-udream-v3-2-0-modular-search.md",
     "sunpole/udream|main|news/2026-07-19-udream-v3-3-0-data-state.md",
-    "sunpole/udream|main|news/2026-07-19-udream-v3-4-0-history-settings.md"
+    "sunpole/udream|main|news/2026-07-19-udream-v3-4-0-history-settings.md",
+    "sunpole/udream|main|news/2026-07-19-udream-v3-5-1-release-record.md"
   ],
   "details": {
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md": {
@@ -376,6 +377,15 @@
       "post_url": "https://t.me/uNewsLog/46",
       "queued_at": "2026-07-18T23:21:34.000Z",
       "published_at": "2026-07-19T03:44:11.879Z"
+    },
+    "sunpole/udream|main|news/2026-07-19-udream-v3-5-1-release-record.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        47
+      ],
+      "post_url": "https://t.me/uNewsLog/47",
+      "queued_at": "2026-07-19T19:47:27.000Z",
+      "published_at": "2026-07-19T21:01:35.076Z"
     }
   }
 }
