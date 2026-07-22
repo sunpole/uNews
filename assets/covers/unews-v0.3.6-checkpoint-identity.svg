@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">uNews 0.3.6 — checkpoint identity</title>
+  <desc id="desc">Фактическая схема: Telegram message 54 сохранён, Git identity настраивается до publisher-step и каждого checkpoint.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#081326"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#4ade80"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#020617" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#bg)"/>
+  <circle cx="1080" cy="80" r="180" fill="#2563eb" opacity="0.16"/>
+  <circle cx="90" cy="660" r="220" fill="#14b8a6" opacity="0.10"/>
+
+  <text x="70" y="88" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="28" font-weight="700">uNews 0.3.6</text>
+  <text x="70" y="145" fill="#f8fafc" font-family="Arial, sans-serif" font-size="48" font-weight="800">Checkpoint снова создаётся вовремя</text>
+  <text x="70" y="188" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="23">Git identity настраивается до первого Telegram-поста</text>
+  <rect x="70" y="218" width="1060" height="4" rx="2" fill="url(#line)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="70" y="260" width="305" height="158" rx="24" fill="#101b34" stroke="#334155"/>
+    <text x="100" y="306" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">ПОДТВЕРЖДЁННЫЙ ПОСТ</text>
+    <text x="100" y="366" fill="#f8fafc" font-family="Arial, sans-serif" font-size="58" font-weight="800">54</text>
+    <text x="180" y="352" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="22">uDream 23.8.0</text>
+    <text x="180" y="383" fill="#4ade80" font-family="Arial, sans-serif" font-size="20">published.json сохранён</text>
+
+    <rect x="447" y="260" width="305" height="158" rx="24" fill="#101b34" stroke="#334155"/>
+    <text x="477" y="306" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">ПОРЯДОК WORKFLOW</text>
+    <text x="477" y="349" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="23" font-weight="700">1. Git identity</text>
+    <text x="477" y="383" fill="#f8fafc" font-family="Arial, sans-serif" font-size="23">2. publish:all</text>
+    <text x="477" y="411" fill="#4ade80" font-family="Arial, sans-serif" font-size="21">3. per-post checkpoint</text>
+
+    <rect x="824" y="260" width="306" height="158" rx="24" fill="#101b34" stroke="#334155"/>
+    <text x="854" y="306" fill="#94a3b8" font-family="Arial, sans-serif" font-size="19">РЕГРЕССИОННАЯ ЗАЩИТА</text>
+    <text x="854" y="353" fill="#4ade80" font-family="Arial, sans-serif" font-size="34" font-weight="800">SOURCE CHECK</text>
+    <text x="854" y="391" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="19">identity обязана быть</text>
+    <text x="854" y="415" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="19">выше publisher-step</text>
+  </g>
+
+  <rect x="70" y="462" width="1060" height="126" rx="26" fill="#0b1224" stroke="#334155"/>
+  <text x="106" y="508" fill="#f8fafc" font-family="Arial, sans-serif" font-size="24" font-weight="700">Сохранённые гарантии</text>
+  <text x="106" y="548" fill="#cbd5e1" font-family="Arial, sans-serif" font-size="21">FIFO · пауза 61 секунда · максимум 20 постов · state recovery · secret redaction</text>
+  <text x="106" y="576" fill="#7dd3fc" font-family="Arial, sans-serif" font-size="20">Fallback commit остаётся дополнительной защитой, а не заменой checkpoint.</text>
+
+  <text x="70" y="640" fill="#64748b" font-family="Arial, sans-serif" font-size="18">Источник: data/published.json и workflow fix/checkpoint-identity-v0.3.6 · 2026-07-22</text>
+</svg>
