@@ -1,0 +1,35 @@
+name: Verify uNews v0.3.7 image integrity
+
+on:
+  push:
+    branches:
+      - fix/image-integrity-v0.3.7
+    paths:
+      - .github/workflows/verify-image-integrity-v0.3.7.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+
+      - name: Run all regression tests
+        run: npm test
+
+      - name: Audit all pending public patchnotes and image bytes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNEWS_DRY_RUN: "1"
+        run: npm run publish:all:check
