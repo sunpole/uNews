@@ -1,0 +1,59 @@
+name: Diagnose Telegram v0.3.5
+
+on:
+  push:
+    branches:
+      - fix/queue-recovery-v0.3.5
+    paths:
+      - .github/workflows/diagnose-telegram-v0.3.5.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/queue-recovery-v0.3.5
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run safe getMe/getChat diagnostics
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
+        run: |
+          mkdir -p diagnostics
+          set +e
+          npm run diagnose:telegram > diagnostics/v0.3.5-telegram.txt 2>&1
+          status=$?
+          set -e
+
+          cat > diagnostics/v0.3.5-telegram-summary.json <<EOF
+          {
+            "commit": "$(git rev-parse HEAD)",
+            "exit_code": $status,
+            "captured_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          cat diagnostics/v0.3.5-telegram.txt
+          cat diagnostics/v0.3.5-telegram-summary.json
+
+      - name: Commit sanitized diagnostics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/v0.3.5-telegram.txt diagnostics/v0.3.5-telegram-summary.json
+          git commit -m "chore: capture safe Telegram diagnostics"
+          git push origin HEAD:fix/queue-recovery-v0.3.5
