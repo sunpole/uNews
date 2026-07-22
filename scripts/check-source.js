@@ -35,6 +35,7 @@ for (const file of files) {
 
 const publisherWorkflowPath = path.resolve(".github/workflows/publish-all-news.yml");
 const publisherWorkflow = await readFile(publisherWorkflowPath, "utf8");
+const realPublisherCommand = "\n          npm run publish:all\n";
 requireSourceOrder(
   publisherWorkflow,
   "- name: Configure checkpoint Git identity",
@@ -44,13 +45,13 @@ requireSourceOrder(
 requireSourceOrder(
   publisherWorkflow,
   'git config user.name "github-actions[bot]"',
-  "npm run publish:all",
+  realPublisherCommand,
   "publish-all-news workflow",
 );
 requireSourceOrder(
   publisherWorkflow,
   'git config user.email "41898282+github-actions[bot]@users.noreply.github.com"',
-  "npm run publish:all",
+  realPublisherCommand,
   "publish-all-news workflow",
 );
 if (!publisherWorkflow.includes('UNEWS_GIT_CHECKPOINT: "1"')) {
