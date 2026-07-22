@@ -1,6 +1,6 @@
 {
   "name": "unews",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Telegram publisher for u-project patchnotes and development news.",
   "private": true,
   "type": "module",
@@ -11,8 +11,9 @@
     "publish:all:check": "node scripts/run-publish-all-news.js --check",
     "diagnose:telegram": "node scripts/diagnose-telegram-credentials.js",
     "check:fixtures": "node scripts/check-fixtures.js && node scripts/check-queue-fixtures.js",
+    "check:images": "node scripts/check-image-integrity.js",
     "check:source": "node scripts/check-source.js",
-    "test": "npm run check:source && npm run check:fixtures",
+    "test": "npm run check:source && npm run check:fixtures && npm run check:images",
     "edit:caption": "node scripts/edit-message-caption.js",
     "edit:media": "node scripts/edit-message-media.js"
   },

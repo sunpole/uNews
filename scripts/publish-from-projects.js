@@ -10,6 +10,7 @@ import {
   extractTelegramMessageIds,
 } from "./patchnote-policy.js";
 import { parsePatchnote } from "./lib/front-matter.js";
+import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
 function printUsage() {
@@ -84,29 +85,38 @@ function stripQuotes(value) {
   return value;
 }
 
-async function assertFilesExist(filePaths) {
-  for (const filePath of filePaths) {
-    await access(filePath);
-  }
-}
-
 function resolveImagePaths(markdownPath, imageNames) {
   const baseDir = path.dirname(markdownPath);
   return imageNames.map((imageName) => path.resolve(baseDir, imageName));
 }
 
-async function createFileBlob(filePath) {
-  const bytes = await readFile(filePath);
-  return new Blob([bytes], { type: getImageMimeType(filePath) });
+async function loadValidatedLocalImages(imagePaths, imageNames) {
+  const images = [];
+  for (const [index, filePath] of imagePaths.entries()) {
+    const name = imageNames[index];
+    let bytes;
+    try {
+      bytes = await readFile(filePath);
+    } catch (error) {
+      throw new Error(`${name}: local image read failed: ${error.message}`);
+    }
+    const validated = validateImageBytes(bytes, {
+      fileName: name,
+      label: `${name} (${filePath})`,
+    });
+    images.push({ name, filePath, validated });
+  }
+  return images;
 }
 
-function getImageMimeType(filePath) {
-  const extension = path.extname(filePath).toLowerCase();
-
-  if (extension === ".jpg" || extension === ".jpeg") return "image/jpeg";
-  if (extension === ".webp") return "image/webp";
-  if (extension === ".gif") return "image/gif";
-  return "image/png";
+function imageSummary(images) {
+  return images.map(({ name, validated }) => ({
+    name,
+    format: validated.format,
+    bytes: validated.bytes,
+    width: validated.width ?? null,
+    height: validated.height ?? null,
+  }));
 }
 
 async function main() {
@@ -124,14 +134,15 @@ async function main() {
   const { frontMatter, body } = parsePatchnote(markdown, markdownPath);
   const policy = assertPublicationPolicy({ frontMatter, body, label: markdownPath });
   const imagePaths = resolveImagePaths(markdownPath, policy.imageNames);
-  await assertFilesExist(imagePaths);
+  const validatedImages = await loadValidatedLocalImages(imagePaths, policy.imageNames);
 
-  const method = imagePaths.length > 1 ? "sendMediaGroup" : imagePaths.length === 1 ? "sendPhoto" : "sendMessage";
+  const method = validatedImages.length > 1 ? "sendMediaGroup" : validatedImages.length === 1 ? "sendPhoto" : "sendMessage";
 
   const summary = {
     method,
     patchnote: markdownPath,
     images: policy.imageNames,
+    imageIntegrity: imageSummary(validatedImages),
     captionLength: policy.captionText.length,
     captionWasTruncated: policy.captionWasTruncated,
     messageLength: policy.messageText.length,
@@ -152,9 +163,9 @@ async function main() {
     throw new Error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID are required unless --dry-run is used.");
   }
 
-  const mediaItems = imagePaths.map((imagePath) => ({
-    name: path.basename(imagePath),
-    loadBlob: () => createFileBlob(imagePath),
+  const mediaItems = validatedImages.map(({ name, validated }) => ({
+    name,
+    loadBlob: () => validatedImageBlob(validated),
   }));
   const payload = await publishToTelegram({
     token,
