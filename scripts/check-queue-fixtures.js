@@ -5,7 +5,8 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueBatch, selectQueueHead } from "./lib/queue.js";
-import { normalizePublishedState, selectedKeyAfterRun, writeJsonIfChangedOrStale } from "./lib/state.js";
+import { buildFailureHealthSnapshot, recordFatalRun, sanitizeFailureMessage } from "./lib/run-state.js";
+import { buildHealthSnapshot, normalizePublishedState, selectedKeyAfterRun, writeJsonIfChangedOrStale } from "./lib/state.js";
 
 assert.equal(compareVersions("3.0.0", "3.1.0"), -1);
 assert.equal(compareVersions("3.1.0", "3.0.0"), 1);
@@ -28,8 +29,46 @@ assert.deepEqual(normalizePublishedState({ published: [], details: {} }), { publ
 assert.equal(selectedKeyAfterRun("project|news/item.md", false), "project|news/item.md");
 assert.equal(selectedKeyAfterRun("project|news/item.md", true), null, "published item must disappear from health selection");
 
+const successfulHealth = buildHealthSnapshot({
+  checkedAt: "2026-07-22T09:30:00Z",
+  pendingCount: 8,
+  readyCount: 1,
+  blockedCount: 0,
+  selectedKey: "sunpole/udream|main|news/item.md",
+  dryRun: false,
+});
+assert.equal(successfulHealth.last_attempt_status, "success");
+assert.equal(successfulHealth.last_error, null);
+assert.equal(successfulHealth.last_successful_check_at, "2026-07-22T09:30:00Z");
+
+const safeFailure = sanitizeFailureMessage(
+  "Telegram bot123456:abcdefghijklmnopqrstuvwxyz failed with 123456:abcdefghijklmnopqrstuvwxyz",
+  ["123456:abcdefghijklmnopqrstuvwxyz"],
+);
+assert.equal(safeFailure.includes("abcdefghijklmnopqrstuvwxyz"), false, "failure text must redact Telegram tokens");
+
+const failedHealth = buildFailureHealthSnapshot(
+  {
+    last_successful_check_at: "2026-07-19T21:01:36Z",
+    pending_count: 8,
+    ready_project_count: 1,
+    error_count: 0,
+    selected_key: "sunpole/udream|main|news/item.md",
+  },
+  {
+    checkedAt: "2026-07-22T09:31:00Z",
+    message: "Telegram preflight failed",
+  },
+);
+assert.equal(failedHealth.last_successful_check_at, "2026-07-19T21:01:36Z");
+assert.equal(failedHealth.last_attempt_at, "2026-07-22T09:31:00Z");
+assert.equal(failedHealth.last_attempt_status, "failed");
+assert.equal(failedHealth.error_count, 1);
+assert.equal(failedHealth.last_error, "Telegram preflight failed");
+
 const tempDirectory = await mkdtemp(path.join(tmpdir(), "unews-state-"));
 const healthPath = path.join(tempDirectory, "health.json");
+const errorsPath = path.join(tempDirectory, "errors.json");
 const originalHealth = { last_successful_check_at: "2026-07-18T10:00:00Z", pending_count: 0 };
 const nextHealth = { last_successful_check_at: "2026-07-18T10:15:00Z", pending_count: 0 };
 await writeFile(healthPath, JSON.stringify(originalHealth), "utf8");
@@ -54,6 +93,21 @@ assert.equal(
   true,
   "a daily health heartbeat must eventually be persisted",
 );
+
+await recordFatalRun({
+  message: "Publisher failed with SECRET_VALUE",
+  checkedAt: "2026-07-22T09:32:00Z",
+  healthPath,
+  errorsPath,
+  secretValues: ["SECRET_VALUE"],
+});
+const recordedHealth = JSON.parse(await readFile(healthPath, "utf8"));
+const recordedErrors = JSON.parse(await readFile(errorsPath, "utf8"));
+assert.equal(recordedHealth.last_successful_check_at, "2026-07-18T10:15:00Z");
+assert.equal(recordedHealth.last_attempt_status, "failed");
+assert.equal(recordedHealth.last_error.includes("SECRET_VALUE"), false);
+assert.equal(recordedErrors.errors[0].kind, "fatal-run");
+assert.equal(recordedErrors.errors[0].errors[0].includes("SECRET_VALUE"), false);
 await rm(tempDirectory, { recursive: true });
 
 const project = (repo) => ({ repo });
@@ -86,4 +140,4 @@ assert.deepEqual(
   "a batch must honor its safety limit",
 );
 
-console.log("OK FIFO queue, version order and per-project blocking");
+console.log("OK FIFO queue, version order, recovery state and per-project blocking");

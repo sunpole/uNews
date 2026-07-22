@@ -65,11 +65,14 @@ export function buildHealthSnapshot({ checkedAt, pendingCount, readyCount, block
   return {
     schema: 1,
     last_successful_check_at: checkedAt,
+    last_attempt_at: checkedAt,
+    last_attempt_status: "success",
     pending_count: pendingCount,
     ready_project_count: readyCount,
     error_count: blockedCount,
     selected_key: selectedKey || null,
     mode: dryRun ? "dry-run" : "publish",
+    last_error: null,
   };
 }
 
