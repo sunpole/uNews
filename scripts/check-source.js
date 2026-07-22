@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readdir } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -14,6 +14,16 @@ async function listJavaScriptFiles(directory) {
   return nested.flat();
 }
 
+function requireSourceOrder(source, earlier, later, label) {
+  const earlierIndex = source.indexOf(earlier);
+  const laterIndex = source.indexOf(later);
+  if (earlierIndex < 0) throw new Error(`${label}: missing ${earlier}`);
+  if (laterIndex < 0) throw new Error(`${label}: missing ${later}`);
+  if (earlierIndex >= laterIndex) {
+    throw new Error(`${label}: ${earlier} must appear before ${later}`);
+  }
+}
+
 const files = await listJavaScriptFiles(path.resolve("scripts"));
 for (const file of files) {
   const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
@@ -23,4 +33,31 @@ for (const file of files) {
   }
 }
 
-console.log(`OK syntax: ${files.length} JavaScript files`);
+const publisherWorkflowPath = path.resolve(".github/workflows/publish-all-news.yml");
+const publisherWorkflow = await readFile(publisherWorkflowPath, "utf8");
+requireSourceOrder(
+  publisherWorkflow,
+  "- name: Configure checkpoint Git identity",
+  "- name: Publish new patchnotes",
+  "publish-all-news workflow",
+);
+requireSourceOrder(
+  publisherWorkflow,
+  'git config user.name "github-actions[bot]"',
+  "npm run publish:all",
+  "publish-all-news workflow",
+);
+requireSourceOrder(
+  publisherWorkflow,
+  'git config user.email "41898282+github-actions[bot]@users.noreply.github.com"',
+  "npm run publish:all",
+  "publish-all-news workflow",
+);
+if (!publisherWorkflow.includes('UNEWS_GIT_CHECKPOINT: "1"')) {
+  throw new Error("publish-all-news workflow: Git checkpoint mode must remain enabled");
+}
+
+console.log(
+  `OK syntax: ${files.length} JavaScript files; `
+  + "publisher Git identity precedes checkpointed publication",
+);
