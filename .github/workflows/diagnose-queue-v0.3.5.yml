@@ -1,0 +1,67 @@
+name: Diagnose uNews queue v0.3.5
+
+on:
+  push:
+    branches:
+      - fix/queue-recovery-v0.3.5
+    paths:
+      - .github/workflows/diagnose-queue-v0.3.5.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout complete source
+        uses: actions/checkout@v4
+        with:
+          ref: fix/queue-recovery-v0.3.5
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Capture tests and dry-run queue output
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNEWS_DRY_RUN: "1"
+        run: |
+          mkdir -p diagnostics
+          set +e
+          npm test > diagnostics/v0.3.5-tests.txt 2>&1
+          test_status=$?
+          npm run publish:all:check > diagnostics/v0.3.5-dry-run.txt 2>&1
+          dry_status=$?
+          set -e
+
+          cat > diagnostics/v0.3.5-summary.json <<EOF
+          {
+            "commit": "$(git rev-parse HEAD)",
+            "tests_exit_code": $test_status,
+            "dry_run_exit_code": $dry_status,
+            "captured_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          EOF
+
+          echo "=== TESTS ==="
+          cat diagnostics/v0.3.5-tests.txt
+          echo "=== DRY RUN ==="
+          cat diagnostics/v0.3.5-dry-run.txt
+          echo "=== SUMMARY ==="
+          cat diagnostics/v0.3.5-summary.json
+
+      - name: Commit diagnostic evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/v0.3.5-tests.txt diagnostics/v0.3.5-dry-run.txt diagnostics/v0.3.5-summary.json
+          git commit -m "chore: capture uNews queue diagnosis"
+          git push origin HEAD:fix/queue-recovery-v0.3.5
