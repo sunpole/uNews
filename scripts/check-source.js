@@ -24,6 +24,14 @@ function requireSourceOrder(source, earlier, later, label) {
   }
 }
 
+function requireIncludes(source, expected, label) {
+  if (!source.includes(expected)) throw new Error(`${label}: missing ${expected}`);
+}
+
+function forbidIncludes(source, forbidden, label) {
+  if (source.includes(forbidden)) throw new Error(`${label}: forbidden legacy source ${forbidden}`);
+}
+
 const files = await listJavaScriptFiles(path.resolve("scripts"));
 for (const file of files) {
   const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8" });
@@ -54,11 +62,62 @@ requireSourceOrder(
   realPublisherCommand,
   "publish-all-news workflow",
 );
-if (!publisherWorkflow.includes('UNEWS_GIT_CHECKPOINT: "1"')) {
-  throw new Error("publish-all-news workflow: Git checkpoint mode must remain enabled");
+requireIncludes(
+  publisherWorkflow,
+  'UNEWS_GIT_CHECKPOINT: "1"',
+  "publish-all-news workflow",
+);
+
+const batchPublisher = await readFile(path.resolve("scripts/publish-all-news.js"), "utf8");
+requireIncludes(
+  batchPublisher,
+  'import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";',
+  "batch publisher",
+);
+requireIncludes(batchPublisher, "loadValidatedRemoteImages", "batch publisher");
+requireIncludes(batchPublisher, "validatedImageBlob(validated)", "batch publisher");
+requireSourceOrder(
+  batchPublisher,
+  "const auditedImages = await loadValidatedRemoteImages",
+  "const batch = selectQueueBatch",
+  "batch publisher queue audit",
+);
+requireSourceOrder(
+  batchPublisher,
+  "const validatedImages = await loadValidatedRemoteImages",
+  "await publishToTelegram",
+  "batch publisher pre-send validation",
+);
+forbidIncludes(batchPublisher, 'fetch(url, { method: "HEAD" })', "batch publisher");
+forbidIncludes(batchPublisher, "assertRemoteImagesExist", "batch publisher");
+
+const localPublisher = await readFile(path.resolve("scripts/publish-from-projects.js"), "utf8");
+requireIncludes(
+  localPublisher,
+  'import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";',
+  "local publisher",
+);
+requireIncludes(localPublisher, "loadValidatedLocalImages", "local publisher");
+requireIncludes(localPublisher, "validatedImageBlob(validated)", "local publisher");
+requireSourceOrder(
+  localPublisher,
+  "const validatedImages = await loadValidatedLocalImages",
+  "await publishToTelegram",
+  "local publisher image validation",
+);
+
+const imageIntegrity = await readFile(path.resolve("scripts/lib/image-integrity.js"), "utf8");
+for (const required of [
+  'fetchImpl(url, { method: "GET" })',
+  "PNG CRC mismatch",
+  "inflateSync",
+  "PNG has trailing bytes after IEND",
+  "extension declares",
+]) {
+  requireIncludes(imageIntegrity, required, "image integrity module");
 }
 
 console.log(
   `OK syntax: ${files.length} JavaScript files; `
-  + "publisher Git identity precedes checkpointed publication",
+  + "publisher identity, GET image audit, deep validation and Blob upload are guarded",
 );
