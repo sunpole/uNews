@@ -1,5 +1,15 @@
 {
   "schema": 1,
-  "updated_at": null,
-  "errors": []
+  "updated_at": "2026-07-22T09:41:28.712Z",
+  "errors": [
+    {
+      "kind": "fatal-run",
+      "project": null,
+      "key": null,
+      "version": null,
+      "errors": [
+        "Telegram sendPhoto failed: Bad Request: IMAGE_PROCESS_FAILED"
+      ]
+    }
+  ]
 }
