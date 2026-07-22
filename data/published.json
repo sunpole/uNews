@@ -11,6 +11,7 @@
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-2-four-hour-schedule.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-3-batch-publishing.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-3-4-security-hardening.md",
+    "sunpole/uNews|main|news/2026-07-22-unews-v0-3-5-queue-recovery.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
@@ -517,6 +518,15 @@
       "post_url": "https://t.me/uNewsLog/61",
       "queued_at": "2026-07-22T08:28:00.000Z",
       "published_at": "2026-07-22T11:42:16.014Z"
+    },
+    "sunpole/uNews|main|news/2026-07-22-unews-v0-3-5-queue-recovery.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        62
+      ],
+      "post_url": "https://t.me/uNewsLog/62",
+      "queued_at": "2026-07-22T09:38:37.000Z",
+      "published_at": "2026-07-22T11:43:19.600Z"
     }
   }
 }
