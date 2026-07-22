@@ -21,6 +21,7 @@ import {
 } from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
 import { checkpointPublishedState } from "./lib/git-checkpoint.js";
+import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
 const MAX_POSTS_PER_RUN = Math.max(1, Math.min(20, Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 20)));
@@ -87,12 +88,27 @@ function imageDownloadUrl(newsFile, imageName) {
     .join("/")}`;
 }
 
-async function assertRemoteImagesExist(patchnote, imageNames) {
+async function loadValidatedRemoteImages(patchnote, imageNames) {
+  const images = [];
   for (const imageName of imageNames) {
     const url = imageDownloadUrl(patchnote, imageName);
-    const response = await fetch(url, { method: "HEAD" });
-    if (!response.ok) throw new Error(`Image is not available (${response.status}): ${imageName}`);
+    const validated = await fetchValidatedImage(url, {
+      fileName: imageName,
+      label: `${patchnote.key} image ${imageName}`,
+    });
+    images.push({ name: imageName, url, validated });
   }
+  return images;
+}
+
+function imageIntegritySummary(images) {
+  return images.map(({ name, validated }) => ({
+    name,
+    format: validated.format,
+    bytes: validated.bytes,
+    width: validated.width ?? null,
+    height: validated.height ?? null,
+  }));
 }
 
 async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
@@ -101,8 +117,15 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
     body: patchnote.body,
     label: patchnote.key,
   });
-  const mediaItems = policy.imageNames.map((name) => ({ name, url: imageDownloadUrl(patchnote, name) }));
-  await assertRemoteImagesExist(patchnote, policy.imageNames);
+
+  // Re-fetch immediately before Telegram. This prevents a file from changing
+  // between the queue audit and the actual send, and ensures Telegram receives
+  // the exact bytes that uNews validated.
+  const validatedImages = await loadValidatedRemoteImages(patchnote, policy.imageNames);
+  const mediaItems = validatedImages.map(({ name, validated }) => ({
+    name,
+    loadBlob: () => validatedImageBlob(validated),
+  }));
   const method = mediaItems.length > 1 ? "sendMediaGroup" : mediaItems.length === 1 ? "sendPhoto" : "sendMessage";
 
   console.log(`${dryRun ? "Would publish" : "Publishing"}: ${patchnote.key} via ${method}`);
@@ -111,6 +134,7 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
       {
         method,
         images: policy.imageNames,
+        imageIntegrity: imageIntegritySummary(validatedImages),
         captionLength: policy.captionText.length,
         captionWasTruncated: policy.captionWasTruncated,
         link: policy.link,
@@ -190,8 +214,14 @@ async function main() {
         throw new Error(`Invalid semantic version: ${patchnote.frontMatter.version || "missing"}`);
       }
       const policy = assertPublicationPolicy({ frontMatter: patchnote.frontMatter, body: patchnote.body, label: patchnote.key });
-      await assertRemoteImagesExist(patchnote, policy.imageNames);
-      inspected.push({ ...patchnote, queuedAt, queuedAtSource: queueTime.source, errors: [] });
+      const auditedImages = await loadValidatedRemoteImages(patchnote, policy.imageNames);
+      inspected.push({
+        ...patchnote,
+        queuedAt,
+        queuedAtSource: queueTime.source,
+        imageIntegrity: imageIntegritySummary(auditedImages),
+        errors: [],
+      });
     } catch (error) {
       inspected.push({ ...patchnote, queuedAt, queuedAtSource: "front-matter", errors: [error.message] });
     }
