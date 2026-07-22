@@ -1,11 +1,11 @@
 name: Verify uNews v0.3.7 image integrity
 
 on:
-  push:
-    branches:
-      - fix/image-integrity-v0.3.7
+  pull_request:
     paths:
-      - .github/workflows/verify-image-integrity-v0.3.7.yml
+      - "scripts/**"
+      - "package.json"
+      - ".github/workflows/verify-image-integrity-v0.3.7.yml"
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout exact branch
+      - name: Checkout exact pull request head
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Node.js 22
