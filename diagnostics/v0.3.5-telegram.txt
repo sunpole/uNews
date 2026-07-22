@@ -1,0 +1,15 @@
+
+> unews@0.3.4 diagnose:telegram
+> node scripts/diagnose-telegram-credentials.js
+
+env file: missing
+TELEGRAM_BOT_TOKEN: present
+TELEGRAM_BOT_TOKEN format: looks_like_telegram_token
+TELEGRAM_CHANNEL_ID: present
+BOT_USERNAME: missing
+channel target: @uNewsLog
+bot getMe: OK
+bot username: @uNewsDev_bot
+channel getChat: OK
+channel type: channel
+channel username: @uNewsLog
