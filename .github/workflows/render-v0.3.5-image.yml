@@ -1,0 +1,43 @@
+name: Render uNews v0.3.5 image
+
+on:
+  push:
+    branches:
+      - fix/queue-recovery-v0.3.5
+    paths:
+      - .github/workflows/render-v0.3.5-image.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/queue-recovery-v0.3.5
+          fetch-depth: 0
+
+      - name: Install SVG renderer
+        run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
+
+      - name: Render PNG
+        run: |
+          rsvg-convert \
+            --width 1200 \
+            --height 675 \
+            --output news/2026-07-22-unews-v0-3-5-queue-recovery.png \
+            assets/covers/unews-v0.3.5-queue-recovery.svg
+          file news/2026-07-22-unews-v0-3-5-queue-recovery.png
+
+      - name: Commit rendered image
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add news/2026-07-22-unews-v0-3-5-queue-recovery.png
+          git commit -m "docs: add v0.3.5 recovery image"
+          git push origin HEAD:fix/queue-recovery-v0.3.5
