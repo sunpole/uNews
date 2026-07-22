@@ -22,6 +22,36 @@ jobs:
           ref: fix/checkpoint-identity-v0.3.6
           fetch-depth: 0
 
+      - name: Synchronize exact README statements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("README.md")
+          source = path.read_text(encoding="utf-8")
+          replacements = [
+              (
+                  "Текущая версия: **0.3.5**.",
+                  "Текущая версия: **0.3.6**.",
+              ),
+              (
+                  "- preflight безопасно проверяет Telegram bot token через `getMe` и доступ к каналу через `getChat`;\n- `publish:all` выполняется через `scripts/run-publish-all-news.js`;",
+                  "- preflight безопасно проверяет Telegram bot token через `getMe` и доступ к каналу через `getChat`;\n- до `publish:all` workflow настраивает Git identity `github-actions[bot]`, необходимую для каждого per-post checkpoint;\n- `publish:all` выполняется через `scripts/run-publish-all-news.js`;",
+              ),
+              (
+                  "uNews работает как GitHub-first очередь для публичных проектов. Версия `0.3.5` устраняет потерю диагностического состояния при фатальном сбое workflow и сохраняет существующие правила FIFO, безопасности, паузы и checkpoint.",
+                  "uNews работает как GitHub-first очередь для публичных проектов. Версия `0.3.6` настраивает Git identity до publisher-step, поэтому каждый успешный Telegram-пост снова получает немедленный GitHub checkpoint; recovery-state `0.3.5`, FIFO, безопасность и пауза сохранены.",
+              ),
+          ]
+
+          for old, new in replacements:
+              if source.count(old) != 1:
+                  raise SystemExit(f"Expected exactly one README occurrence: {old}")
+              source = source.replace(old, new, 1)
+
+          path.write_text(source, encoding="utf-8")
+          PY
+
       - name: Install SVG renderer
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
 
@@ -34,10 +64,10 @@ jobs:
             assets/covers/unews-v0.3.6-checkpoint-identity.svg
           file news/2026-07-22-unews-v0-3-6-checkpoint-identity.png
 
-      - name: Commit rendered image
+      - name: Commit synchronized documentation
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add news/2026-07-22-unews-v0-3-6-checkpoint-identity.png
-          git commit -m "docs: add v0.3.6 checkpoint image"
+          git add README.md news/2026-07-22-unews-v0-3-6-checkpoint-identity.png
+          git commit -m "docs: sync v0.3.6 checkpoint documentation"
           git push origin HEAD:fix/checkpoint-identity-v0.3.6
