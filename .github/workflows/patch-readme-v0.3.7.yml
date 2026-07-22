@@ -1,0 +1,121 @@
+name: Patch uNews v0.3.7 README
+
+on:
+  push:
+    branches:
+      - fix/image-integrity-v0.3.7
+    paths:
+      - .github/workflows/patch-readme-v0.3.7.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: fix/image-integrity-v0.3.7
+          fetch-depth: 0
+
+      - name: Apply exact README replacements
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('README.md')
+          source = path.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  'Текущая версия: **0.3.6**. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).',
+                  'Текущая версия: **0.3.7**. Она проверяет реальные bytes и внутреннюю структуру каждого изображения до Telegram. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).',
+              ),
+              (
+                  '- автоматически закрывать служебный Issue после восстановления очереди.\n',
+                  '- автоматически закрывать служебный Issue после восстановления очереди;\n'
+                  '- скачивать каждое pending-изображение через GET вместо одной проверки HEAD;\n'
+                  '- проверять сигнатуру, формат, размеры, PNG CRC и zlib-декодирование;\n'
+                  '- повторно проверять файл непосредственно перед Telegram;\n'
+                  '- передавать Telegram уже проверенные bytes как multipart Blob.\n',
+              ),
+              (
+                  '3. uNews просыпается раз в четыре часа или вручную.\n'
+                  '4. Внутри проекта более ранняя версия всегда идёт первой.\n'
+                  '5. Среди проектов выбирается самая старая запись по `queued_at`.\n'
+                  '6. За запуск публикуется до 20 готовых Telegram-постов в строгом FIFO-порядке с паузой 61 секунду.\n'
+                  '7. Каждый успешный результат немедленно записывается и отправляется в GitHub через `data/published.json`.\n'
+                  '8. После завершения запуска обновляются `data/health.json` и `data/errors.json`.\n'
+                  '9. При фатальном сбое защитный runner сохраняет безопасную причину, а workflow сначала коммитит state и только затем помечается неуспешным.\n',
+                  '3. uNews просыпается раз в четыре часа или вручную.\n'
+                  '4. Каждый pending-файл скачивается через GET и проходит byte-level image integrity проверку.\n'
+                  '5. Внутри проекта более ранняя версия всегда идёт первой.\n'
+                  '6. Среди проектов выбирается самая старая запись по `queued_at`.\n'
+                  '7. Непосредственно перед Telegram выбранное изображение скачивается и проверяется повторно.\n'
+                  '8. Telegram получает проверенный Blob, а не исходный raw URL.\n'
+                  '9. За запуск публикуется до 20 готовых Telegram-постов в строгом FIFO-порядке с паузой 61 секунду.\n'
+                  '10. Каждый успешный результат немедленно записывается и отправляется в GitHub через `data/published.json`.\n'
+                  '11. После завершения запуска обновляются `data/health.json` и `data/errors.json`; при фатальном сбое state коммитится до возврата ошибки.\n',
+              ),
+              (
+                  'Приватные репозитории не сканируются. Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md).',
+                  'Приватные репозитории не сканируются. Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md). Точный контракт изображений: [docs/IMAGE_INTEGRITY.md](docs/IMAGE_INTEGRITY.md).',
+              ),
+              (
+                  'npm run diagnose:telegram\n'
+                  'npm test',
+                  'npm run diagnose:telegram\n'
+                  'npm run check:images\n'
+                  'npm test',
+              ),
+              (
+                  'npm run diagnose:telegram\n'
+                  'npm run check:fixtures\n'
+                  'npm test',
+                  'npm run diagnose:telegram\n'
+                  'npm run check:fixtures\n'
+                  'npm run check:images\n'
+                  'npm test',
+              ),
+              (
+                  '- preflight безопасно проверяет Telegram bot token через `getMe` и доступ к каналу через `getChat`;\n',
+                  '- preflight безопасно проверяет Telegram bot token через `getMe` и доступ к каналу через `getChat`;\n'
+                  '- queue audit скачивает все pending-изображения через GET и проверяет реальные bytes;\n'
+                  '- непосредственно перед постом файл проверяется повторно и отправляется как проверенный Blob;\n',
+              ),
+              (
+                  '- `scripts/lib/github-client.js` — только обнаружение публичных репозиториев и чтение GitHub;\n',
+                  '- `scripts/lib/github-client.js` — только обнаружение публичных репозиториев и чтение GitHub;\n'
+                  '- `scripts/lib/image-integrity.js` — GET, сигнатуры, размеры, PNG CRC и декодирование;\n',
+              ),
+              (
+                  'uNews работает как GitHub-first очередь для публичных проектов. Версия `0.3.6` настраивает Git identity до publisher-step, поэтому каждый успешный Telegram-пост снова получает немедленный GitHub checkpoint; recovery-state `0.3.5`, FIFO, безопасность и пауза сохранены.',
+                  'uNews работает как GitHub-first очередь для публичных проектов. Версия `0.3.7` проверяет реальные bytes каждого изображения до FIFO и повторно перед Telegram; версия `0.3.6` сохраняет Git identity до publisher-step, а recovery-state `0.3.5`, FIFO, безопасность и пауза остаются действующими.',
+              ),
+              (
+                  '- dry-run сканирует публичные проекты и проверяет изображения;\n',
+                  '- полный dry-run `0.3.7` проверил 35 публичных проектов: 9 pending, 9 ready, 0 errors;\n'
+                  '- dry-run подтвердил пять исправленных uDream-изображений и отсутствие повторной публикации message `54`;\n',
+              ),
+          ]
+
+          for old, new in replacements:
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'Expected exactly one README fragment, found {count}: {old[:90]!r}')
+              source = source.replace(old, new, 1)
+
+          path.write_text(source, encoding='utf-8')
+          PY
+
+      - name: Commit README update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: update README for uNews v0.3.7"
+          git push origin HEAD:fix/image-integrity-v0.3.7
