@@ -34,6 +34,8 @@ jobs:
     steps:
       - name: Checkout uNews
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -41,7 +43,6 @@ jobs:
           node-version: "22"
 
       - name: Test queue and source
-        if: ${{ github.event_name != 'schedule' }}
         run: npm test
 
       - name: Dry-run scan
@@ -52,15 +53,25 @@ jobs:
         run: npm run publish:all:check
 
       - name: Verify Telegram credentials
+        id: telegram
         if: ${{ github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+        continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+          BOT_USERNAME: ${{ secrets.BOT_USERNAME }}
         run: npm run diagnose:telegram
+
+      - name: Record Telegram preflight failure
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) && steps.telegram.outcome == 'failure' }}
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/record-run-failure.js "Telegram credential diagnostics failed. Open the Actions run for the sanitized getMe/getChat result."
 
       - name: Publish new patchnotes
         id: publish
-        if: ${{ github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) && steps.telegram.outcome == 'success' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -69,20 +80,23 @@ jobs:
           UNEWS_TELEGRAM_POST_INTERVAL_MS: "61000"
           UNEWS_GIT_CHECKPOINT: "1"
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          before="$(git hash-object data/published.json)"
+          set +e
           npm run publish:all
-          after="$(git hash-object data/published.json)"
-          if [ "$before" != "$after" ]; then
+          status=$?
+          set -e
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -eq 0 ]; then
             echo "published=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
           fi
+          exit 0
 
-      - name: Commit published state
-        if: ${{ github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false') }}
+      - name: Commit queue state
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) }}
         run: |
           if git diff --quiet -- data/; then
-            echo "No published state changes."
+            echo "No queue state changes."
             exit 0
           fi
 
@@ -90,7 +104,17 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data/
           git commit -m "Update uNews queue state"
-          git push
+          if ! git push; then
+            echo "Queue-state push raced with another main update; rebasing once."
+            git pull --rebase origin main
+            git push
+          fi
+
+      - name: Fail after state checkpoint
+        if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) && (steps.telegram.outcome == 'failure' || steps.publish.outputs.exit_code != '0') }}
+        run: |
+          echo "uNews real publication failed after diagnostic state was preserved."
+          exit 1
 
       - name: Report or close queue alert
         if: ${{ always() && (github.event_name == 'schedule' || github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'false')) }}
@@ -103,9 +127,8 @@ jobs:
 
           if [ "${{ job.status }}" != "success" ] || [ "$error_count" -gt 0 ]; then
             if [ -z "$existing" ]; then
-              gh issue create --title "$title" --body "Автоматическая очередь uNews обнаружила ошибку. Откройте последний запуск workflow Publish all project news и файл data/errors.json. Секреты в отчёт не включаются."
+              gh issue create --title "$title" --body "Автоматическая очередь uNews обнаружила ошибку. Откройте последний запуск workflow Publish all project news, data/health.json и data/errors.json. Секреты в отчёт не включаются."
             fi
           elif [ -n "$existing" ]; then
-            gh issue close "$existing" --comment "Очередь снова проходит проверку без ошибок."
+            gh issue close "$existing" --comment "Очередь снова проходит проверку без ошибок. Состояние и Telegram checkpoint подтверждены."
           fi
-
