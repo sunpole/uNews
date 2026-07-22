@@ -4,9 +4,66 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { assertImageBufferMatchesName, detectImageType, fetchAndValidateRemoteImage } from "./lib/image-validation.js";
 import { compareVersions, cooldownRemainingMs, parseQueuedAt, selectQueueBatch, selectQueueHead } from "./lib/queue.js";
 import { buildFailureHealthSnapshot, recordFatalRun, sanitizeFailureMessage } from "./lib/run-state.js";
 import { buildHealthSnapshot, normalizePublishedState, selectedKeyAfterRun, writeJsonIfChangedOrStale } from "./lib/state.js";
+
+const padded = (prefix, suffix = Buffer.alloc(0)) => Buffer.concat([
+  prefix,
+  Buffer.alloc(Math.max(0, 80 - prefix.length - suffix.length)),
+  suffix,
+]);
+const pngFixture = padded(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+const jpegFixture = padded(Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from([0xff, 0xd9]));
+const gifFixture = padded(Buffer.from("GIF89a", "ascii"));
+const webpFixture = padded(Buffer.from("RIFF0000WEBP", "ascii"));
+
+assert.equal(detectImageType(pngFixture), "png");
+assert.equal(detectImageType(jpegFixture), "jpeg");
+assert.equal(detectImageType(gifFixture), "gif");
+assert.equal(detectImageType(webpFixture), "webp");
+assert.equal(detectImageType(Buffer.from("not an image")), "unknown");
+assert.equal(assertImageBufferMatchesName(pngFixture, "card.png").bytes, 80);
+assert.equal(assertImageBufferMatchesName(jpegFixture, "card.jpg").type, "jpeg");
+assert.equal(assertImageBufferMatchesName(gifFixture, "card.gif").type, "gif");
+assert.equal(assertImageBufferMatchesName(webpFixture, "card.webp").type, "webp");
+assert.throws(
+  () => assertImageBufferMatchesName(Buffer.from("<!doctype html>not a png".padEnd(80, " ")), "card.png"),
+  /signature mismatch.*detected unknown/,
+);
+assert.throws(
+  () => assertImageBufferMatchesName(jpegFixture, "card.png"),
+  /declares png, detected jpeg/,
+);
+assert.throws(
+  () => assertImageBufferMatchesName(Buffer.alloc(10), "card.png"),
+  /unexpectedly small/,
+);
+assert.throws(
+  () => assertImageBufferMatchesName(pngFixture, "card.svg"),
+  /Unsupported image extension/,
+);
+
+const fetchedImage = await fetchAndValidateRemoteImage(
+  "https://example.test/card.png",
+  "card.png",
+  {
+    fetchImpl: async () => new Response(pngFixture, {
+      status: 200,
+      headers: { "content-length": String(pngFixture.length), "content-type": "application/octet-stream" },
+    }),
+  },
+);
+assert.deepEqual(fetchedImage, { imageName: "card.png", type: "png", bytes: 80 });
+await assert.rejects(
+  fetchAndValidateRemoteImage(
+    "https://example.test/missing.png",
+    "missing.png",
+    { fetchImpl: async () => new Response("not found", { status: 404 }) },
+  ),
+  /not available \(404\)/,
+);
 
 assert.equal(compareVersions("3.0.0", "3.1.0"), -1);
 assert.equal(compareVersions("3.1.0", "3.0.0"), 1);
@@ -140,4 +197,4 @@ assert.deepEqual(
   "a batch must honor its safety limit",
 );
 
-console.log("OK FIFO queue, version order, recovery state and per-project blocking");
+console.log("OK image signatures, FIFO queue, version order, recovery state and per-project blocking");
