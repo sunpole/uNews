@@ -11,6 +11,7 @@ import {
   extractTelegramMessageIds,
 } from "./patchnote-policy.js";
 import { parsePatchnote, stripQuotes } from "./lib/front-matter.js";
+import { fetchAndValidateRemoteImage } from "./lib/image-validation.js";
 import { cooldownRemainingMs, isSemanticVersion, parseQueuedAt, selectQueueBatch, selectQueueHead } from "./lib/queue.js";
 import {
   buildHealthSnapshot,
@@ -87,12 +88,17 @@ function imageDownloadUrl(newsFile, imageName) {
     .join("/")}`;
 }
 
-async function assertRemoteImagesExist(patchnote, imageNames) {
+async function validateRemoteImages(patchnote, imageNames) {
+  const results = [];
   for (const imageName of imageNames) {
     const url = imageDownloadUrl(patchnote, imageName);
-    const response = await fetch(url, { method: "HEAD" });
-    if (!response.ok) throw new Error(`Image is not available (${response.status}): ${imageName}`);
+    try {
+      results.push(await fetchAndValidateRemoteImage(url, imageName));
+    } catch (error) {
+      throw new Error(`${patchnote.key}: ${error.message}`);
+    }
   }
+  return results;
 }
 
 async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
@@ -102,7 +108,7 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
     label: patchnote.key,
   });
   const mediaItems = policy.imageNames.map((name) => ({ name, url: imageDownloadUrl(patchnote, name) }));
-  await assertRemoteImagesExist(patchnote, policy.imageNames);
+  const validatedImages = await validateRemoteImages(patchnote, policy.imageNames);
   const method = mediaItems.length > 1 ? "sendMediaGroup" : mediaItems.length === 1 ? "sendPhoto" : "sendMessage";
 
   console.log(`${dryRun ? "Would publish" : "Publishing"}: ${patchnote.key} via ${method}`);
@@ -110,7 +116,7 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
     JSON.stringify(
       {
         method,
-        images: policy.imageNames,
+        images: validatedImages,
         captionLength: policy.captionText.length,
         captionWasTruncated: policy.captionWasTruncated,
         link: policy.link,
@@ -190,7 +196,7 @@ async function main() {
         throw new Error(`Invalid semantic version: ${patchnote.frontMatter.version || "missing"}`);
       }
       const policy = assertPublicationPolicy({ frontMatter: patchnote.frontMatter, body: patchnote.body, label: patchnote.key });
-      await assertRemoteImagesExist(patchnote, policy.imageNames);
+      await validateRemoteImages(patchnote, policy.imageNames);
       inspected.push({ ...patchnote, queuedAt, queuedAtSource: queueTime.source, errors: [] });
     } catch (error) {
       inspected.push({ ...patchnote, queuedAt, queuedAtSource: "front-matter", errors: [error.message] });
@@ -198,7 +204,16 @@ async function main() {
   }
 
   const batch = selectQueueBatch(inspected, MAX_POSTS_PER_RUN);
-  const reportedErrors = [...scanErrors, ...batch.blocked];
+  const inspectionErrors = inspected
+    .filter((item) => item.errors.length > 0)
+    .map((item) => ({
+      kind: "patchnote",
+      project: item.project.repo,
+      key: item.key,
+      version: item.frontMatter.version || null,
+      errors: item.errors,
+    }));
+  const reportedErrors = [...scanErrors, ...inspectionErrors];
   console.log(
     `New patchnotes found: ${candidates.length}. Ready in this batch: ${batch.selected.length}. Reported errors: ${reportedErrors.length}.`,
   );
