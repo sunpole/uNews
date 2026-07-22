@@ -1,0 +1,63 @@
+name: Diagnose rejected PNG structure v0.3.7
+
+on:
+  push:
+    branches:
+      - fix/pending-image-validation-v0.3.7
+    paths:
+      - .github/workflows/diagnose-png-decode-v0.3.7.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/pending-image-validation-v0.3.7
+          fetch-depth: 0
+
+      - name: Install image validators
+        run: sudo apt-get update && sudo apt-get install -y pngcheck imagemagick
+
+      - name: Download and decode rejected PNG
+        run: |
+          mkdir -p diagnostics
+          url="https://raw.githubusercontent.com/sunpole/udream/main/news/2026-07-20-udream-v23-8-1-release-finalization.png"
+          curl --fail --location --silent --show-error "$url" --output diagnostics/v23.8.1-rejected.png
+
+          set +e
+          {
+            echo "=== FILE ==="
+            file diagnostics/v23.8.1-rejected.png
+            echo
+            echo "=== PNGCHECK ==="
+            pngcheck -vv diagnostics/v23.8.1-rejected.png
+            echo "pngcheck_exit=$?"
+            echo
+            echo "=== IDENTIFY ==="
+            identify -verbose diagnostics/v23.8.1-rejected.png
+            echo "identify_exit=$?"
+            echo
+            echo "=== RE-ENCODE ==="
+            convert diagnostics/v23.8.1-rejected.png -strip PNG24:diagnostics/v23.8.1-reencoded.png
+            echo "convert_exit=$?"
+            file diagnostics/v23.8.1-reencoded.png
+            identify diagnostics/v23.8.1-reencoded.png
+          } > diagnostics/v0.3.7-png-decode.txt 2>&1
+          set -e
+          cat diagnostics/v0.3.7-png-decode.txt
+
+      - name: Commit sanitized decode report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/v0.3.7-png-decode.txt
+          git commit -m "chore: capture rejected PNG decode report"
+          git push origin HEAD:fix/pending-image-validation-v0.3.7
