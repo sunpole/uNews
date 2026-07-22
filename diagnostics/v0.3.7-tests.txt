@@ -29,4 +29,4 @@ OK secret-like text
 OK GitHub credential-like text
 OK assigned credential-like text
 OK uSugar medical/private risk
-OK image signatures, FIFO queue, version order, recovery state and per-project blocking
+OK image signatures and CRC, FIFO queue, version order, recovery state and per-project blocking

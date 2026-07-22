@@ -3,113 +3,10 @@
 > node scripts/run-publish-all-news.js --check
 
 Projects to scan: 35
-New patchnotes found: 9. Ready in this batch: 9. Reported errors: 0.
-Would publish 9 item(s) in FIFO order (limit: 20).
-Would publish: sunpole/udream|main|news/2026-07-20-udream-v23-8-1-release-finalization.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-20-udream-v23-8-1-release-finalization.png",
-      "type": "png",
-      "bytes": 3953
-    }
-  ],
-  "captionLength": 321,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-21-udream-v23-8-2-release-record.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-20-udream-v23-8-1-release-finalization.png",
-      "type": "png",
-      "bytes": 3953
-    }
-  ],
-  "captionLength": 321,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-21-udream-v23-8-3-unified-documentation.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-18-udream-v3-1-0-repository-order.jpg",
-      "type": "jpeg",
-      "bytes": 175786
-    }
-  ],
-  "captionLength": 393,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-21-udream-v23-8-4-translation-plan-readme.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-18-udream-v3-1-0-repository-order.jpg",
-      "type": "jpeg",
-      "bytes": 175786
-    }
-  ],
-  "captionLength": 399,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-21-udream-v23-8-5-work-status.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-18-udream-v3-1-0-repository-order.jpg",
-      "type": "jpeg",
-      "bytes": 175786
-    }
-  ],
-  "captionLength": 385,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-22-udream-v23-8-6-unified-ai-workflow.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-22-udream-v23-8-6-unified-ai-workflow.png",
-      "type": "png",
-      "bytes": 121180
-    }
-  ],
-  "captionLength": 470,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
-Would publish: sunpole/udream|main|news/2026-07-22-udream-v23-8-7-playwright-screenshots.md via sendPhoto
-{
-  "method": "sendPhoto",
-  "images": [
-    {
-      "imageName": "2026-07-22-udream-v23-8-7-playwright-screenshots.png",
-      "type": "png",
-      "bytes": 108002
-    }
-  ],
-  "captionLength": 501,
-  "captionWasTruncated": false,
-  "link": "https://sunpole.github.io/udream/",
-  "hashtags": "#uDream #тыСон #uNews #Sunpole"
-}
+New patchnotes found: 9. Ready in this batch: 2. Reported errors: 2.
+Would publish 2 item(s) in FIFO order (limit: 20).
+Blocked sunpole/udream: sunpole/udream|main|news/2026-07-20-udream-v23-8-1-release-finalization.md: sunpole/udream|main|news/2026-07-20-udream-v23-8-1-release-finalization.md: PNG CRC mismatch in PLTE chunk: 2026-07-20-udream-v23-8-1-release-finalization.png; computed 527b6d8c, stored 7448050f
+Blocked sunpole/udream: sunpole/udream|main|news/2026-07-21-udream-v23-8-2-release-record.md: sunpole/udream|main|news/2026-07-21-udream-v23-8-2-release-record.md: PNG CRC mismatch in PLTE chunk: 2026-07-20-udream-v23-8-1-release-finalization.png; computed 527b6d8c, stored 7448050f
 Would publish: sunpole/uNews|main|news/2026-07-22-unews-v0-3-5-queue-recovery.md via sendPhoto
 {
   "method": "sendPhoto",
@@ -117,7 +14,9 @@ Would publish: sunpole/uNews|main|news/2026-07-22-unews-v0-3-5-queue-recovery.md
     {
       "imageName": "2026-07-22-unews-v0-3-5-queue-recovery.png",
       "type": "png",
-      "bytes": 162914
+      "bytes": 162914,
+      "width": 1200,
+      "height": 675
     }
   ],
   "captionLength": 438,
@@ -132,7 +31,9 @@ Would publish: sunpole/uNews|main|news/2026-07-22-unews-v0-3-6-checkpoint-identi
     {
       "imageName": "2026-07-22-unews-v0-3-6-checkpoint-identity.png",
       "type": "png",
-      "bytes": 175041
+      "bytes": 175041,
+      "width": 1200,
+      "height": 675
     }
   ],
   "captionLength": 419,
