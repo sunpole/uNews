@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">uNews 0.3.7 — проверка изображений до Telegram</title>
+  <desc id="desc">Схема двухэтапной GET-проверки, PNG CRC и успешного dry-run: 35 проектов, 9 готовых записей, 0 ошибок.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071426"/>
+      <stop offset="1" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="18" flood-color="#020617" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="675" fill="url(#background)"/>
+  <circle cx="1100" cy="70" r="190" fill="#2563eb" opacity="0.16"/>
+  <circle cx="70" cy="650" r="220" fill="#0891b2" opacity="0.12"/>
+
+  <text x="72" y="76" fill="#7dd3fc" font-family="DejaVu Sans, Arial, sans-serif" font-size="25" font-weight="700">uNews · GitHub-first Telegram очередь</text>
+  <text x="72" y="137" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="47" font-weight="800">0.3.7 · Image Integrity</text>
+  <text x="72" y="177" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="23">Повреждённый файл блокируется до Telegram, а проверенные bytes отправляются как Blob</text>
+  <rect x="72" y="207" width="1056" height="4" rx="2" fill="url(#accent)"/>
+
+  <g filter="url(#shadow)">
+    <rect x="72" y="244" width="246" height="214" rx="24" fill="#0b1224" stroke="#334155"/>
+    <rect x="336" y="244" width="246" height="214" rx="24" fill="#0b1224" stroke="#334155"/>
+    <rect x="600" y="244" width="246" height="214" rx="24" fill="#0b1224" stroke="#334155"/>
+    <rect x="864" y="244" width="264" height="214" rx="24" fill="#0b1224" stroke="#334155"/>
+  </g>
+
+  <circle cx="112" cy="287" r="22" fill="#0e7490"/><text x="105" y="296" fill="#ecfeff" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="800">1</text>
+  <text x="96" y="337" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700">GET всех pending</text>
+  <text x="96" y="374" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Не HEAD и не одно</text>
+  <text x="96" y="402" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">наличие файла по URL</text>
+  <text x="96" y="430" fill="#67e8f9" font-family="DejaVu Sans Mono, monospace" font-size="16">queue audit</text>
+
+  <circle cx="376" cy="287" r="22" fill="#4338ca"/><text x="369" y="296" fill="#eef2ff" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="800">2</text>
+  <text x="360" y="337" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700">Формат и bytes</text>
+  <text x="360" y="374" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">PNG / JPEG / GIF / WebP</text>
+  <text x="360" y="402" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Размеры и лимит 20 MiB</text>
+  <text x="360" y="430" fill="#a5b4fc" font-family="DejaVu Sans Mono, monospace" font-size="16">extension = format</text>
+
+  <circle cx="640" cy="287" r="22" fill="#7c3aed"/><text x="633" y="296" fill="#f5f3ff" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="800">3</text>
+  <text x="624" y="337" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700">PNG CRC + zlib</text>
+  <text x="624" y="374" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">IHDR · PLTE · IDAT · IEND</text>
+  <text x="624" y="402" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Trailing bytes запрещены</text>
+  <text x="624" y="430" fill="#c4b5fd" font-family="DejaVu Sans Mono, monospace" font-size="16">deep decode</text>
+
+  <circle cx="904" cy="287" r="22" fill="#0f766e"/><text x="897" y="296" fill="#f0fdfa" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="800">4</text>
+  <text x="888" y="337" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="24" font-weight="700">Повторный GET</text>
+  <text x="888" y="374" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Проверка перед постом</text>
+  <text x="888" y="402" fill="#cbd5e1" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Buffer → multipart Blob</text>
+  <text x="888" y="430" fill="#5eead4" font-family="DejaVu Sans Mono, monospace" font-size="16">Telegram</text>
+
+  <rect x="72" y="492" width="1056" height="112" rx="24" fill="#07111f" stroke="#334155"/>
+  <text x="100" y="531" fill="#94a3b8" font-family="DejaVu Sans, Arial, sans-serif" font-size="18">Проверенный GitHub Actions dry-run после ремонта uDream PR #24</text>
+  <text x="104" y="579" fill="#67e8f9" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="800">35 проектов</text>
+  <text x="418" y="579" fill="#a5b4fc" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="800">9 ready</text>
+  <text x="687" y="579" fill="#5eead4" font-family="DejaVu Sans, Arial, sans-serif" font-size="34" font-weight="800">0 errors</text>
+  <text x="934" y="579" fill="#f8fafc" font-family="DejaVu Sans, Arial, sans-serif" font-size="22" font-weight="700">message 54 не повторяется</text>
+
+  <text x="72" y="645" fill="#64748b" font-family="DejaVu Sans Mono, monospace" font-size="15">Источник: docs/IMAGE_INTEGRITY.md + GitHub Actions dry-run 2026-07-22</text>
+</svg>
