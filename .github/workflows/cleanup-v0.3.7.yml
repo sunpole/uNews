@@ -1,0 +1,47 @@
+name: Clean temporary uNews v0.3.7 files
+
+on:
+  push:
+    branches:
+      - fix/image-integrity-v0.3.7
+    paths:
+      - .github/workflows/cleanup-v0.3.7.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: fix/image-integrity-v0.3.7
+          fetch-depth: 0
+
+      - name: Remove temporary workflows and dry-run report
+        run: |
+          git rm \
+            .github/workflows/capture-v0.3.7-dry-run-report.yml \
+            .github/workflows/patch-readme-v0.3.7.yml \
+            .github/workflows/render-v0.3.7-image.yml \
+            .github/workflows/verify-image-integrity-v0.3.7.yml \
+            .github/workflows/cleanup-v0.3.7.yml \
+            diagnostics/v0.3.7-dry-run-report.json
+
+          test ! -e .github/workflows/capture-v0.3.7-dry-run-report.yml
+          test ! -e .github/workflows/patch-readme-v0.3.7.yml
+          test ! -e .github/workflows/render-v0.3.7-image.yml
+          test ! -e .github/workflows/verify-image-integrity-v0.3.7.yml
+          test ! -e .github/workflows/cleanup-v0.3.7.yml
+          test ! -e diagnostics/v0.3.7-dry-run-report.json
+
+      - name: Commit permanent v0.3.7 set
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: remove temporary uNews v0.3.7 tooling"
+          git push origin HEAD:fix/image-integrity-v0.3.7
