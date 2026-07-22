@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-22T09:59:22.194Z",
+  "updated_at": "2026-07-22T10:14:33.079Z",
   "errors": [
     {
       "kind": "fatal-run",
@@ -8,7 +8,7 @@
       "key": null,
       "version": null,
       "errors": [
-        "Command failed: git commit -m Record published uNews item: sunpole/udream|main|news/2026-07-20-udream-v23-8-0-pwa-update.md"
+        "Telegram sendPhoto failed: Bad Request: IMAGE_PROCESS_FAILED"
       ]
     }
   ]

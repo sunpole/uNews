@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "last_successful_check_at": "2026-07-19T21:01:36.252Z",
-  "last_attempt_at": "2026-07-22T09:59:22.194Z",
+  "last_attempt_at": "2026-07-22T10:14:33.079Z",
   "last_attempt_status": "failed",
   "pending_count": 0,
   "ready_project_count": 0,
   "error_count": 1,
   "selected_key": null,
   "mode": "publish",
-  "last_error": "Command failed: git commit -m Record published uNews item: sunpole/udream|main|news/2026-07-20-udream-v23-8-0-pwa-update.md"
+  "last_error": "Telegram sendPhoto failed: Bad Request: IMAGE_PROCESS_FAILED"
 }
