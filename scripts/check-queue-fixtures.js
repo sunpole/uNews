@@ -14,20 +14,35 @@ const padded = (prefix, suffix = Buffer.alloc(0)) => Buffer.concat([
   Buffer.alloc(Math.max(0, 80 - prefix.length - suffix.length)),
   suffix,
 ]);
-const pngFixture = padded(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+const pngFixture = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=",
+  "base64",
+);
+const corruptedPngFixture = Buffer.from(pngFixture);
+corruptedPngFixture[45] ^= 0x01;
 const jpegFixture = padded(Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from([0xff, 0xd9]));
 const gifFixture = padded(Buffer.from("GIF89a", "ascii"));
-const webpFixture = padded(Buffer.from("RIFF0000WEBP", "ascii"));
+const webpFixture = Buffer.alloc(80);
+webpFixture.write("RIFF", 0, "ascii");
+webpFixture.writeUInt32LE(webpFixture.length - 8, 4);
+webpFixture.write("WEBP", 8, "ascii");
 
 assert.equal(detectImageType(pngFixture), "png");
 assert.equal(detectImageType(jpegFixture), "jpeg");
 assert.equal(detectImageType(gifFixture), "gif");
 assert.equal(detectImageType(webpFixture), "webp");
 assert.equal(detectImageType(Buffer.from("not an image")), "unknown");
-assert.equal(assertImageBufferMatchesName(pngFixture, "card.png").bytes, 80);
+assert.deepEqual(
+  assertImageBufferMatchesName(pngFixture, "card.png"),
+  { imageName: "card.png", type: "png", bytes: 68, width: 1, height: 1 },
+);
 assert.equal(assertImageBufferMatchesName(jpegFixture, "card.jpg").type, "jpeg");
 assert.equal(assertImageBufferMatchesName(gifFixture, "card.gif").type, "gif");
 assert.equal(assertImageBufferMatchesName(webpFixture, "card.webp").type, "webp");
+assert.throws(
+  () => assertImageBufferMatchesName(corruptedPngFixture, "corrupted.png"),
+  /PNG CRC mismatch in IDAT chunk/,
+);
 assert.throws(
   () => assertImageBufferMatchesName(Buffer.from("<!doctype html>not a png".padEnd(80, " ")), "card.png"),
   /signature mismatch.*detected unknown/,
@@ -55,7 +70,7 @@ const fetchedImage = await fetchAndValidateRemoteImage(
     }),
   },
 );
-assert.deepEqual(fetchedImage, { imageName: "card.png", type: "png", bytes: 80 });
+assert.deepEqual(fetchedImage, { imageName: "card.png", type: "png", bytes: 68, width: 1, height: 1 });
 await assert.rejects(
   fetchAndValidateRemoteImage(
     "https://example.test/missing.png",
@@ -197,4 +212,4 @@ assert.deepEqual(
   "a batch must honor its safety limit",
 );
 
-console.log("OK image signatures, FIFO queue, version order, recovery state and per-project blocking");
+console.log("OK image signatures and CRC, FIFO queue, version order, recovery state and per-project blocking");
