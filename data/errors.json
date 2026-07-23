@@ -1,5 +1,14 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-22T11:45:28.345Z",
-  "errors": []
+  "updated_at": "2026-07-23T06:37:09.815Z",
+  "errors": [
+    {
+      "project": "sunpole/udream",
+      "key": "sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md",
+      "version": "23.8.8",
+      "errors": [
+        "Patchnote policy failed for sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md:\n- Unsupported type: documentation"
+      ]
+    }
+  ]
 }
