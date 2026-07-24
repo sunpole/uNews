@@ -4,6 +4,7 @@
     "sunpole/500|main|news/2026-06-15-500td-test-autopublish.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-1-0-alpha-first-working-version.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-2-0-alpha-capacity-and-page-pairs.md",
+    "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-3-0-alpha-front-and-mirrored-back.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-2-health-contract.md",
@@ -567,6 +568,15 @@
       "post_url": "https://t.me/uNewsLog/66",
       "queued_at": "2026-07-24T14:06:18.000Z",
       "published_at": "2026-07-24T17:45:22.531Z"
+    },
+    "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-3-0-alpha-front-and-mirrored-back.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        67
+      ],
+      "post_url": "https://t.me/uNewsLog/67",
+      "queued_at": "2026-07-24T15:55:25.000Z",
+      "published_at": "2026-07-24T17:46:26.626Z"
     }
   }
 }
