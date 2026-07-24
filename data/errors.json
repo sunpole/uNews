@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-23T06:37:09.815Z",
+  "updated_at": "2026-07-24T14:03:28.972Z",
   "errors": [
     {
       "project": "sunpole/udream",
@@ -8,6 +8,14 @@
       "version": "23.8.8",
       "errors": [
         "Patchnote policy failed for sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md:\n- Unsupported type: documentation"
+      ]
+    },
+    {
+      "project": "sunpole/uImposition",
+      "key": "sunpole/uImposition|main|news/README.md",
+      "version": null,
+      "errors": [
+        "Patchnote has no YAML front matter: sunpole/uImposition|main|news/README.md"
       ]
     }
   ]

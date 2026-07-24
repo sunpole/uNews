@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "last_successful_check_at": "2026-07-24T10:26:36.386Z",
-  "last_attempt_at": "2026-07-24T10:26:36.386Z",
+  "last_successful_check_at": "2026-07-24T14:03:28.972Z",
+  "last_attempt_at": "2026-07-24T14:03:28.972Z",
   "last_attempt_status": "success",
-  "pending_count": 4,
+  "pending_count": 5,
   "ready_project_count": 0,
-  "error_count": 1,
+  "error_count": 2,
   "selected_key": null,
   "mode": "publish",
   "last_error": null
