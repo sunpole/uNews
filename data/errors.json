@@ -1,21 +1,14 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-24T14:03:28.972Z",
+  "updated_at": "2026-07-24T17:47:30.381Z",
   "errors": [
     {
-      "project": "sunpole/udream",
-      "key": "sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md",
-      "version": "23.8.8",
-      "errors": [
-        "Patchnote policy failed for sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md:\n- Unsupported type: documentation"
-      ]
-    },
-    {
-      "project": "sunpole/uImposition",
-      "key": "sunpole/uImposition|main|news/README.md",
+      "kind": "fatal-run",
+      "project": null,
+      "key": null,
       "version": null,
       "errors": [
-        "Patchnote has no YAML front matter: sunpole/uImposition|main|news/README.md"
+        "Telegram sendPhoto failed: Bad Request: PHOTO_INVALID_DIMENSIONS"
       ]
     }
   ]
