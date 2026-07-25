@@ -33,6 +33,14 @@ async function waitForServer() {
   throw new Error("Local uNews release page did not start");
 }
 
+const assertions = [
+  "0.3.8",
+  "1440 × 8625",
+  "≤ 9800 px",
+  "≤ 10 МБ",
+  "Не изменяется",
+];
+
 let browser;
 try {
   await waitForServer();
@@ -46,13 +54,7 @@ try {
   const target = page.locator("#telegram-photo-normalization");
   await target.waitFor({ state: "visible", timeout: 30_000 });
   const text = await target.innerText();
-  for (const expected of [
-    "uNews 0.3.8",
-    "1440 × 8625",
-    "≤ 9800 px",
-    "≤ 10 МБ",
-    "Не изменяется",
-  ]) {
+  for (const expected of assertions) {
     if (!text.includes(expected)) throw new Error(`Release proof is missing ${JSON.stringify(expected)}`);
   }
 
@@ -73,13 +75,7 @@ try {
     screenshot: screenshotName,
     viewport: { width: 1280, height: 1000 },
     bounds: box,
-    assertions: [
-      "uNews 0.3.8",
-      "1440 × 8625",
-      "≤ 9800 px",
-      "≤ 10 МБ",
-      "Не изменяется",
-    ],
+    assertions,
   };
   await writeFile(
     path.join(outputDir, "release-screenshot.json"),
