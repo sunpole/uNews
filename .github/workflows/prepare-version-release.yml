@@ -83,7 +83,22 @@ jobs:
       - name: Capture factual release screenshot
         if: steps.marker.outputs.exists == 'true'
         working-directory: tools/release-screenshot
-        run: npm run capture
+        shell: bash
+        run: |
+          set +e
+          npm run capture > ../../artifacts/release/capture.log 2>&1
+          status=$?
+          tail -n 120 ../../artifacts/release/capture.log
+          exit "$status"
+
+      - name: Upload release screenshot diagnostics
+        if: always() && steps.marker.outputs.exists == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: unews-release-${{ github.event.pull_request.number || github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/release/
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Create patchnote image and release manifest
         if: steps.marker.outputs.exists == 'true'
