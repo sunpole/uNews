@@ -1,0 +1,38 @@
+# Changelog
+
+## 0.3.8 — 2026-07-25
+
+### Added
+
+- dependency-free Telegram photo normalizer for non-interlaced 8-bit RGB/RGBA PNG;
+- in-memory nearest-neighbour resize that preserves the source file and its archive;
+- explicit `sendPhoto` safety limits: 10 MB, dimension sum 10000, aspect ratio 20:1;
+- internal safe dimension target of 9800 px;
+- source-versus-delivery image summaries in dry-run and real publication logs;
+- regression test for the factual `1440×8625` uImposition M4 screenshot;
+- regression test proving the safe `1180×1189` M6 screenshot remains byte-for-byte unchanged;
+- rejection of unsupported oversized indexed PNG before Telegram;
+- focused public proof block on the uNews website;
+- machine-readable `VERSION.json`.
+
+### Changed
+
+- FIFO publication and single-project publication both prepare Telegram-safe copies only after source GET, CRC, zlib, format and dimension validation;
+- original project images remain untouched in their repositories and historical archives;
+- `npm test` now includes Telegram photo normalization fixtures;
+- the visible uNews site and package metadata are synchronized to `0.3.8`.
+
+### Fixed
+
+- real Telegram publication no longer stops with `PHOTO_INVALID_DIMENSIONS` when an otherwise valid Chromium screenshot exceeds the photo dimension-sum limit.
+
+### Verified
+
+- `1440×8625` is normalized to a valid PNG with dimension sum at most 9800;
+- output remains below 10 MB and within 20:1 aspect ratio;
+- the source Buffer is not mutated;
+- output bytes pass the same deep image-integrity validator again;
+- `1180×1189` is delivered without any byte changes;
+- the complete existing queue/source/image test suite remains green.
+
+Earlier release history remains preserved in `news/`, Git history, README, audits and published Telegram checkpoints.
