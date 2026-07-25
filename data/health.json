@@ -1,12 +1,12 @@
 {
   "schema": 1,
-  "last_successful_check_at": "2026-07-24T14:03:28.972Z",
-  "last_attempt_at": "2026-07-25T05:03:08.640Z",
-  "last_attempt_status": "failed",
+  "last_successful_check_at": "2026-07-25T05:48:41.413Z",
+  "last_attempt_at": "2026-07-25T05:48:41.413Z",
+  "last_attempt_status": "success",
   "pending_count": 5,
   "ready_project_count": 0,
   "error_count": 2,
   "selected_key": null,
   "mode": "publish",
-  "last_error": "Telegram sendPhoto failed: Bad Request: PHOTO_INVALID_DIMENSIONS"
+  "last_error": null
 }
