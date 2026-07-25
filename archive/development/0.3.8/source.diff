@@ -1,0 +1,1538 @@
+diff --git a/.github/workflows/prepare-version-release.yml b/.github/workflows/prepare-version-release.yml
+new file mode 100644
+index 0000000..b8fae8d
+--- /dev/null
++++ b/.github/workflows/prepare-version-release.yml
+@@ -0,0 +1,182 @@
++name: Prepare uNews version release
++
++on:
++  push:
++    branches:
++      - 'fix/**'
++      - 'feature/**'
++    paths:
++      - 'news/.prepare-release.json'
++      - 'tools/release/**'
++      - 'tools/release-screenshot/**'
++      - '.github/workflows/prepare-version-release.yml'
++  pull_request:
++    paths:
++      - 'news/.prepare-release.json'
++      - 'tools/release/**'
++      - 'tools/release-screenshot/**'
++      - '.github/workflows/prepare-version-release.yml'
++
++permissions:
++  contents: write
++
++jobs:
++  prepare:
++    if: github.actor != 'github-actions[bot]'
++    runs-on: ubuntu-latest
++    timeout-minutes: 35
++    env:
++      TARGET_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
++      SCREENSHOT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
++
++    steps:
++      - name: Checkout exact feature branch
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
++        with:
++          ref: ${{ env.TARGET_BRANCH }}
++          fetch-depth: 0
++          persist-credentials: true
++
++      - name: Detect release marker
++        id: marker
++        shell: bash
++        run: |
++          if [ -f news/.prepare-release.json ]; then
++            echo "exists=true" >> "$GITHUB_OUTPUT"
++          else
++            echo "exists=false" >> "$GITHUB_OUTPUT"
++          fi
++
++      - name: Setup Node.js
++        if: steps.marker.outputs.exists == 'true'
++        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
++        with:
++          node-version: "22"
++
++      - name: Read release version
++        if: steps.marker.outputs.exists == 'true'
++        shell: bash
++        run: |
++          node --input-type=module <<'NODE' >> "$GITHUB_ENV"
++          import fs from 'node:fs';
++          const marker = JSON.parse(fs.readFileSync('news/.prepare-release.json', 'utf8'));
++          console.log(`RELEASE_VERSION=${marker.version}`);
++          NODE
++
++      - name: Run complete uNews test suite
++        if: steps.marker.outputs.exists == 'true'
++        shell: bash
++        run: |
++          mkdir -p artifacts/release
++          npm test 2>&1 | tee artifacts/release/npm-test.log
++
++      - name: Install isolated screenshot tooling
++        if: steps.marker.outputs.exists == 'true'
++        working-directory: tools/release-screenshot
++        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
++
++      - name: Install Chromium
++        if: steps.marker.outputs.exists == 'true'
++        working-directory: tools/release-screenshot
++        run: npx playwright install --with-deps chromium > /tmp/playwright-install.log 2>&1
++
++      - name: Capture factual release screenshot
++        if: steps.marker.outputs.exists == 'true'
++        working-directory: tools/release-screenshot
++        shell: bash
++        run: |
++          set +e
++          npm run capture > ../../artifacts/release/capture.log 2>&1
++          status=$?
++          tail -n 120 ../../artifacts/release/capture.log
++          exit "$status"
++
++      - name: Upload release screenshot diagnostics
++        if: always() && steps.marker.outputs.exists == 'true'
++        uses: actions/upload-artifact@v5
++        with:
++          name: unews-release-${{ github.event.pull_request.number || github.run_id }}-${{ github.run_attempt }}
++          path: artifacts/release/
++          if-no-files-found: warn
++          retention-days: 30
++
++      - name: Create patchnote image and release manifest
++        if: steps.marker.outputs.exists == 'true'
++        run: node tools/release/prepare-release.mjs
++
++      - name: Create source diff and permanent evidence ZIP
++        if: steps.marker.outputs.exists == 'true'
++        shell: bash
++        run: |
++          release_dir="archive/development/${RELEASE_VERSION}"
++          mkdir -p "$release_dir"
++          git fetch origin main
++          git diff --binary "origin/main...HEAD" -- \
++            . ':!archive/development/**' ':!news/.prepare-release.json' \
++            > "$release_dir/source.diff"
++
++          python3 - <<'PY'
++          import json
++          import pathlib
++          import zipfile
++
++          root = pathlib.Path('.').resolve()
++          release_dir = root / 'archive' / 'development' / '${{ env.RELEASE_VERSION }}'
++          manifest_path = release_dir / 'release.json'
++          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
++          archive_path = root / manifest['archive']
++          archive_path.parent.mkdir(parents=True, exist_ok=True)
++
++          inputs = [
++              root / 'artifacts' / 'release',
++              root / manifest['patchnote'],
++              root / manifest['image'],
++              manifest_path,
++              release_dir / 'source.diff',
++              root / 'VERSION.json',
++              root / 'CHANGELOG.md',
++              root / 'package.json',
++              root / 'README.md',
++              root / 'docs' / 'TELEGRAM_PHOTO_NORMALIZATION.md',
++          ]
++
++          with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
++              seen = set()
++              for item in inputs:
++                  if not item.exists():
++                      continue
++                  paths = [item] if item.is_file() else sorted(path for path in item.rglob('*') if path.is_file())
++                  for path in paths:
++                      if path.resolve() == archive_path.resolve():
++                          continue
++                      relative = path.relative_to(root).as_posix()
++                      if relative in seen:
++                          continue
++                      seen.add(relative)
++                      archive.write(path, relative)
++          print(f'Created {archive_path.relative_to(root)} with {len(seen)} files')
++          PY
++
++      - name: Commit release news and evidence to feature branch
++        if: steps.marker.outputs.exists == 'true'
++        shell: bash
++        run: |
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++          git add -A README.md news/ archive/development/
++          git commit -m "release: prepare uNews ${RELEASE_VERSION} checkpoint"
++          local_sha="$(git rev-parse HEAD)"
++
++          if git push origin HEAD:${TARGET_BRANCH}; then
++            exit 0
++          fi
++
++          remote_sha="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
++          if [ "$remote_sha" = "$local_sha" ]; then
++            echo "Generated release commit is already the remote branch head."
++            exit 0
++          fi
++
++          echo "Generated commit: ${local_sha}"
++          echo "Remote branch head: ${remote_sha:-missing}"
++          exit 1
+diff --git a/.github/workflows/publish-version-release.yml b/.github/workflows/publish-version-release.yml
+new file mode 100644
+index 0000000..2a452f1
+--- /dev/null
++++ b/.github/workflows/publish-version-release.yml
+@@ -0,0 +1,112 @@
++name: Publish uNews version release
++
++on:
++  push:
++    branches: [main]
++    paths:
++      - 'archive/development/*/release.json'
++      - '.github/workflows/publish-version-release.yml'
++  workflow_dispatch:
++
++permissions:
++  contents: write
++
++jobs:
++  publish:
++    runs-on: ubuntu-latest
++    timeout-minutes: 15
++    env:
++      GH_TOKEN: ${{ github.token }}
++
++    steps:
++      - name: Checkout exact main commit
++        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
++        with:
++          fetch-depth: 0
++
++      - name: Publish missing uNews release checkpoints
++        shell: bash
++        run: |
++          set -euo pipefail
++          git config user.name "github-actions[bot]"
++          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
++
++          mapfile -t manifests < <(find archive/development -mindepth 2 -maxdepth 2 -name release.json -type f | sort)
++          if [ "${#manifests[@]}" -eq 0 ]; then
++            echo "No uNews release manifests found."
++            exit 0
++          fi
++
++          for manifest in "${manifests[@]}"; do
++            eval "$(node --input-type=module - "$manifest" <<'NODE'
++          import fs from 'node:fs';
++          const data = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
++          const quote = (value) => `'${String(value).replaceAll("'", "'\\''")}'`;
++          console.log(`VERSION=${quote(data.version)}`);
++          console.log(`TAG=${quote(data.tag)}`);
++          console.log(`TITLE=${quote(data.title)}`);
++          console.log(`PRERELEASE=${quote(Boolean(data.prerelease) ? 'true' : 'false')}`);
++          console.log(`SOURCE_COMMIT=${quote(data.sourceCommit)}`);
++          console.log(`PATCHNOTE=${quote(data.patchnote)}`);
++          console.log(`IMAGE=${quote(data.image)}`);
++          console.log(`ARCHIVE=${quote(data.archive)}`);
++          NODE
++          )"
++
++            if ! git merge-base --is-ancestor "$SOURCE_COMMIT" "$GITHUB_SHA"; then
++              echo "Skip ${VERSION}: source commit is not part of current main."
++              continue
++            fi
++            for required in "$PATCHNOTE" "$IMAGE" "$ARCHIVE"; do
++              test -f "$required" || { echo "Missing release file: $required"; exit 1; }
++            done
++
++            release_exists=false
++            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
++              release_exists=true
++            fi
++            remote_tag_sha="$(git ls-remote origin "refs/tags/${TAG}" | head -n1 | cut -f1)"
++            remote_tag_commit="$(git ls-remote origin "refs/tags/${TAG}^{}" | head -n1 | cut -f1)"
++            [ -n "$remote_tag_commit" ] || remote_tag_commit="$remote_tag_sha"
++
++            rollback_branch="release/v${VERSION}"
++            remote_branch_sha="$(git ls-remote origin "refs/heads/${rollback_branch}" | cut -f1)"
++            if [ -z "$remote_branch_sha" ]; then
++              git push origin "$GITHUB_SHA:refs/heads/${rollback_branch}"
++            elif [ "$remote_branch_sha" = "$GITHUB_SHA" ]; then
++              echo "Rollback branch already matches main."
++            elif [ -n "$remote_tag_sha" ] || [ "$release_exists" = "true" ]; then
++              echo "Published checkpoint differs; refusing to move rollback branch."
++              exit 1
++            elif git merge-base --is-ancestor "$remote_branch_sha" "$GITHUB_SHA"; then
++              git push origin "$GITHUB_SHA:refs/heads/${rollback_branch}"
++            else
++              echo "Rollback branch is not a fast-forward ancestor."
++              exit 1
++            fi
++
++            if [ -z "$remote_tag_sha" ]; then
++              git tag -a "$TAG" "$GITHUB_SHA" -m "$TITLE"
++              git push origin "refs/tags/${TAG}"
++            elif [ "$remote_tag_commit" != "$GITHUB_SHA" ]; then
++              echo "Existing tag points to ${remote_tag_commit}; refusing to move it."
++              exit 1
++            fi
++
++            if [ "$release_exists" = "true" ]; then
++              echo "GitHub Release ${TAG} already exists."
++              continue
++            fi
++
++            args=(
++              "$TAG"
++              "$ARCHIVE#Development evidence archive"
++              "$IMAGE#Focused release screenshot"
++              --repo "$GITHUB_REPOSITORY"
++              --verify-tag
++              --title "$TITLE"
++              --notes-file "$PATCHNOTE"
++            )
++            if [ "$PRERELEASE" = "true" ]; then args+=(--prerelease); fi
++            gh release create "${args[@]}"
++          done
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+new file mode 100644
+index 0000000..f7f3d55
+--- /dev/null
++++ b/CHANGELOG.md
+@@ -0,0 +1,38 @@
++# Changelog
++
++## 0.3.8 — 2026-07-25
++
++### Added
++
++- dependency-free Telegram photo normalizer for non-interlaced 8-bit RGB/RGBA PNG;
++- in-memory nearest-neighbour resize that preserves the source file and its archive;
++- explicit `sendPhoto` safety limits: 10 MB, dimension sum 10000, aspect ratio 20:1;
++- internal safe dimension target of 9800 px;
++- source-versus-delivery image summaries in dry-run and real publication logs;
++- regression test for the factual `1440×8625` uImposition M4 screenshot;
++- regression test proving the safe `1180×1189` M6 screenshot remains byte-for-byte unchanged;
++- rejection of unsupported oversized indexed PNG before Telegram;
++- focused public proof block on the uNews website;
++- machine-readable `VERSION.json`.
++
++### Changed
++
++- FIFO publication and single-project publication both prepare Telegram-safe copies only after source GET, CRC, zlib, format and dimension validation;
++- original project images remain untouched in their repositories and historical archives;
++- `npm test` now includes Telegram photo normalization fixtures;
++- the visible uNews site and package metadata are synchronized to `0.3.8`.
++
++### Fixed
++
++- real Telegram publication no longer stops with `PHOTO_INVALID_DIMENSIONS` when an otherwise valid Chromium screenshot exceeds the photo dimension-sum limit.
++
++### Verified
++
++- `1440×8625` is normalized to a valid PNG with dimension sum at most 9800;
++- output remains below 10 MB and within 20:1 aspect ratio;
++- the source Buffer is not mutated;
++- output bytes pass the same deep image-integrity validator again;
++- `1180×1189` is delivered without any byte changes;
++- the complete existing queue/source/image test suite remains green.
++
++Earlier release history remains preserved in `news/`, Git history, README, audits and published Telegram checkpoints.
+diff --git a/VERSION.json b/VERSION.json
+new file mode 100644
+index 0000000..69698ec
+--- /dev/null
++++ b/VERSION.json
+@@ -0,0 +1,35 @@
++{
++  "schemaVersion": 1,
++  "project": "uNews",
++  "version": "0.3.8",
++  "releaseDate": "2026-07-25",
++  "status": "telegram-photo-normalization",
++  "productionReady": true,
++  "summary": {
++    "ru": "uNews сохраняет исходные изображения без изменений, но автоматически создаёт безопасную уменьшенную PNG-копию в памяти, если Telegram отклонит исходные размеры sendPhoto.",
++    "en": "uNews preserves source images unchanged and creates a safe resized PNG copy in memory when the source exceeds Telegram sendPhoto limits."
++  },
++  "verified": {
++    "sourcePreserved": true,
++    "maxPhotoBytes": 10485760,
++    "maxDimensionSum": 10000,
++    "safeDimensionSum": 9800,
++    "maxAspectRatio": 20,
++    "m4Regression": "1440x8625",
++    "safeRegression": "1180x1189"
++  },
++  "releasePolicy": {
++    "rollbackBranch": "release/v{version}",
++    "tag": "v{version}",
++    "githubReleaseRequired": true,
++    "releaseNewsRequired": true,
++    "telegramQueueRequired": true,
++    "permanentEvidenceArchiveRequired": true,
++    "publishedTagsAreImmutable": true
++  },
++  "nextTarget": {
++    "version": "0.3.9",
++    "ru": "Продолжить укрепление очереди только по фактическим ошибкам публикации.",
++    "en": "Continue queue hardening only from factual publication failures."
++  }
++}
+diff --git a/docs/TELEGRAM_PHOTO_NORMALIZATION.md b/docs/TELEGRAM_PHOTO_NORMALIZATION.md
+new file mode 100644
+index 0000000..f447cdc
+--- /dev/null
++++ b/docs/TELEGRAM_PHOTO_NORMALIZATION.md
+@@ -0,0 +1,69 @@
++# Telegram photo normalization / Нормализация фото для Telegram
++
++## Причина
++
++Telegram `sendPhoto` принимает фото не больше 10 МБ, с суммой ширины и высоты не больше 10000 px и отношением сторон не больше 20:1.
++
++uNews обязан сохранять исходные изображения проектов как исторические доказательства. Поэтому длинный Chromium screenshot не заменяется и не перезаписывается в исходном репозитории.
++
++## Порядок обработки
++
++1. uNews скачивает исходный файл через GET.
++2. Проверяет расширение и реальные bytes.
++3. Проверяет PNG signature, chunks, CRC, zlib stream, dimensions и отсутствие trailing bytes.
++4. Если фото уже безопасно для Telegram, тот же Buffer отправляется byte-for-byte.
++5. Если PNG превышает размер или сумму сторон, создаётся временная копия только в памяти.
++6. Копия сохраняет пропорции и получает безопасную сумму сторон не больше 9800 px.
++7. Копия повторно проходит полный image-integrity validator.
++8. Telegram получает только проверенный Blob временной копии.
++9. Исходный файл и исторический архив не меняются.
++
++## Поддержанный автоматический формат
++
++Автоматически нормализуются:
++
++- PNG;
++- bit depth 8;
++- RGB или RGBA;
++- без interlace.
++
++Если oversized-файл имеет другой формат или неподдерживаемую структуру, публикация блокируется до Telegram с понятной ошибкой. uNews не выполняет скрытое преобразование сомнительного изображения.
++
++## Алгоритм
++
++- PNG IDAT распаковывается через zlib;
++- фильтры строк 0–4 восстанавливаются;
++- изображение уменьшается nearest-neighbour с сохранением отношения сторон;
++- новый PNG кодируется с filter 0;
++- chunks получают новый CRC;
++- результат повторно проверяется тем же валидатором.
++
++## Regression fixtures
++
++### Длинный M4 screenshot
++
++```text
++source: 1440 × 8625
++sum:    10065
++result: normalized PNG with sum <= 9800
++```
++
++Проверяется:
++
++- source Buffer не изменён;
++- output меньше 10 МБ;
++- output проходит deep validation;
++- отношение сторон сохранено.
++
++### Безопасный M6 screenshot
++
++```text
++source: 1180 × 1189
++sum:    2369
++```
++
++Он остаётся byte-for-byte неизменным.
++
++## Граница
++
++Нормализация создаёт только Telegram delivery copy. Она не является редактором исходных изображений и не меняет файлы проектов, release assets или архивы.
+\ No newline at end of file
+diff --git a/index.html b/index.html
+index 6cc394c..527d4f2 100644
+--- a/index.html
++++ b/index.html
+@@ -4,17 +4,18 @@
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <meta name="description" content="uNews / тыНовости — автоматическая очередь публикаций проектов Антона в Telegram.">
+-  <title>uNews / тыНовости</title>
++  <title>uNews / тыНовости · v0.3.8</title>
+   <style>
+-    :root { color-scheme: dark; --bg:#061126; --panel:#0c1c38cc; --line:#1e4f83; --text:#f5f9ff; --muted:#a9bdd8; --cyan:#45d8ff; --amber:#ffbd67; }
+-    * { box-sizing: border-box; }
++    :root { color-scheme: dark; --bg:#061126; --panel:#0c1c38cc; --line:#1e4f83; --text:#f5f9ff; --muted:#a9bdd8; --cyan:#45d8ff; --amber:#ffbd67; --green:#72f2b3; }
++    * { box-sizing:border-box; }
+     body { margin:0; min-height:100vh; font:16px/1.55 Inter,system-ui,sans-serif; color:var(--text); background:radial-gradient(circle at 70% 0,#153b70 0,transparent 38%),var(--bg); }
+     a { color:var(--cyan); }
++    code { color:var(--cyan); }
+     .wrap { width:min(1120px,calc(100% - 32px)); margin:auto; }
+     header { padding:72px 0 40px; display:grid; grid-template-columns:1.1fr .9fr; align-items:center; gap:42px; }
+     h1 { margin:0 0 14px; font-size:clamp(48px,8vw,92px); line-height:.95; letter-spacing:-.055em; }
+     h1 span { display:block; margin-top:18px; color:var(--cyan); font-size:.34em; letter-spacing:.02em; }
+-    .lead { max-width:660px; color:var(--muted); font-size:clamp(18px,2.2vw,24px); }
++    .lead { max-width:760px; color:var(--muted); font-size:clamp(18px,2.2vw,24px); }
+     .hero { width:100%; border-radius:28px; border:1px solid #4fcfff66; box-shadow:0 24px 80px #0008; }
+     .status { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:18px 0 54px; }
+     .card { padding:22px; background:var(--panel); border:1px solid var(--line); border-radius:20px; backdrop-filter:blur(14px); }
+@@ -28,8 +29,20 @@
+     .actions { display:flex; flex-wrap:wrap; gap:12px; margin-top:28px; }
+     .button { padding:12px 18px; border-radius:12px; text-decoration:none; font-weight:750; color:#061126; background:var(--cyan); }
+     .button.secondary { color:var(--text); background:transparent; border:1px solid var(--line); }
++    .release-proof { overflow:hidden; border-color:#48d7ff88; background:linear-gradient(145deg,#0d2142ee,#0b1832ee); box-shadow:0 28px 100px #0007; }
++    .release-proof h2 { max-width:850px; margin-bottom:12px; }
++    .proof-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:18px; align-items:stretch; margin-top:28px; }
++    .proof-box { display:flex; flex-direction:column; justify-content:center; min-height:190px; padding:24px; border:1px solid var(--line); border-radius:18px; background:#061126aa; }
++    .proof-box strong { display:block; margin:8px 0; font-size:clamp(28px,4vw,46px); line-height:1; }
++    .proof-box small { color:var(--muted); font-size:15px; }
++    .proof-box.is-safe { border-color:#72f2b388; box-shadow:inset 0 0 0 1px #72f2b322; }
++    .proof-box.is-safe strong { color:var(--green); }
++    .proof-arrow { display:grid; place-items:center; color:var(--cyan); font-size:48px; font-weight:900; }
++    .proof-facts { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:18px; }
++    .proof-fact { padding:14px 16px; border-radius:14px; background:#06112699; border:1px solid #1e4f8377; }
++    .proof-fact strong { display:block; margin-top:4px; font-size:20px; }
+     footer { padding:32px 0 60px; color:var(--muted); border-top:1px solid var(--line); }
+-    @media (max-width:760px) { header { grid-template-columns:1fr; padding-top:44px; } .status,.flow { grid-template-columns:1fr; } }
++    @media (max-width:760px) { header { grid-template-columns:1fr; padding-top:44px; } .status,.flow,.proof-facts { grid-template-columns:1fr; } .proof-grid { grid-template-columns:1fr; } .proof-arrow { transform:rotate(90deg); min-height:42px; } }
+   </style>
+ </head>
+ <body>
+@@ -45,16 +58,40 @@
+       <div class="card"><div class="label">Ошибки</div><div class="value" id="errors">—</div></div>
+     </div>
+ 
++    <section id="telegram-photo-normalization" class="card release-proof">
++      <div class="label">uNews 0.3.8 · Telegram photo safety</div>
++      <h2>Длинный скриншот сохраняется. В Telegram уходит безопасная копия.</h2>
++      <p class="lead">uNews по-прежнему проверяет исходные bytes, PNG CRC и zlib. Если изображение превышает ограничения <code>sendPhoto</code>, бот уменьшает только отправляемую копию в памяти — файл проекта и исторический архив не меняются.</p>
++      <div class="proof-grid">
++        <div class="proof-box">
++          <div class="label">Исходный Chromium PNG</div>
++          <strong>1440 × 8625</strong>
++          <small>Сохраняется без изменений в проекте и архиве.</small>
++        </div>
++        <div class="proof-arrow" aria-hidden="true">→</div>
++        <div class="proof-box is-safe">
++          <div class="label">Копия для Telegram</div>
++          <strong>≤ 9800 px</strong>
++          <small>Сумма сторон, пропорции сохранены, повторная byte-level проверка.</small>
++        </div>
++      </div>
++      <div class="proof-facts">
++        <div class="proof-fact"><span class="label">Размер фото</span><strong>≤ 10 МБ</strong></div>
++        <div class="proof-fact"><span class="label">Отношение сторон</span><strong>≤ 20 : 1</strong></div>
++        <div class="proof-fact"><span class="label">Оригинал</span><strong>Не изменяется</strong></div>
++      </div>
++    </section>
++
+     <section><h2>Как работает очередь</h2><div class="flow">
+       <div class="card"><strong>Патчноут</strong>Проект добавляет Markdown и изображение в папку <code>news/</code>.</div>
+       <div class="card"><strong>Проверка</strong>uNews проверяет текст, ссылку, картинку, секреты и версию.</div>
+-      <div class="card"><strong>Один пост</strong>За запуск выходит только самая старая готовая новость.</div>
++      <div class="card"><strong>Один пост</strong>За запуск выходит самая старая готовая новость, затем очередь продолжается с паузой.</div>
+       <div class="card"><strong>Фиксация</strong>Идентификатор сообщения сразу сохраняется для защиты от дублей.</div>
+     </div></section>
+ 
+-    <section class="card"><div class="label">Версия 0.3.4</div><h2>Все публичные проекты, единое правило</h2><p class="lead">Приватные репозитории не сканируются. Ошибка в одном проекте блокирует его следующие версии, но не останавливает новости остальных проектов.</p><div class="actions"><a class="button secondary" href="docs/QUEUE_ARCHITECTURE.md">Архитектура очереди</a><a class="button secondary" href="UNEWS.md">Инструкция проектам</a><a class="button secondary" href="docs/AUDIT_2026-07-18.md">Аудит 0.2.1</a></div></section>
++    <section class="card"><div class="label">Архитектура очереди</div><h2>Все публичные проекты, единое правило</h2><p class="lead">Приватные репозитории не сканируются. Ошибка в одном проекте блокирует его следующие версии, но не останавливает новости остальных проектов.</p><div class="actions"><a class="button secondary" href="docs/QUEUE_ARCHITECTURE.md">Архитектура очереди</a><a class="button secondary" href="UNEWS.md">Инструкция проектам</a><a class="button secondary" href="docs/AUDIT_2026-07-18.md">Аудит 0.2.1</a></div></section>
+   </main>
+-  <footer><div class="wrap">uNews / тыНовости · автоматическая история разработки проектов Антона</div></footer>
++  <footer><div class="wrap">uNews / тыНовости · v0.3.8 · автоматическая история разработки проектов Антона</div></footer>
+   <script>
+     const text = (id, value) => document.getElementById(id).textContent = value;
+     Promise.allSettled([
+diff --git a/package.json b/package.json
+index 7fa12fa..4f7c361 100644
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,6 @@
+ {
+   "name": "unews",
+-  "version": "0.3.7",
++  "version": "0.3.8",
+   "description": "Telegram publisher for u-project patchnotes and development news.",
+   "private": true,
+   "type": "module",
+@@ -12,8 +12,9 @@
+     "diagnose:telegram": "node scripts/diagnose-telegram-credentials.js",
+     "check:fixtures": "node scripts/check-fixtures.js && node scripts/check-queue-fixtures.js",
+     "check:images": "node scripts/check-image-integrity.js",
++    "check:telegram-photo": "node scripts/check-telegram-photo.js",
+     "check:source": "node scripts/check-source.js",
+-    "test": "npm run check:source && npm run check:fixtures && npm run check:images",
++    "test": "npm run check:source && npm run check:fixtures && npm run check:images && npm run check:telegram-photo",
+     "edit:caption": "node scripts/edit-message-caption.js",
+     "edit:media": "node scripts/edit-message-media.js"
+   },
+diff --git a/scripts/check-source.js b/scripts/check-source.js
+index 94e7ae8..6dbfaf7 100644
+--- a/scripts/check-source.js
++++ b/scripts/check-source.js
+@@ -74,7 +74,13 @@ requireIncludes(
+   'import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";',
+   "batch publisher",
+ );
++requireIncludes(
++  batchPublisher,
++  'import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";',
++  "batch publisher",
++);
+ requireIncludes(batchPublisher, "loadValidatedRemoteImages", "batch publisher");
++requireIncludes(batchPublisher, "prepareTelegramImages", "batch publisher");
+ requireIncludes(batchPublisher, "validatedImageBlob(validated)", "batch publisher");
+ requireSourceOrder(
+   batchPublisher,
+@@ -85,8 +91,14 @@ requireSourceOrder(
+ requireSourceOrder(
+   batchPublisher,
+   "const validatedImages = await loadValidatedRemoteImages",
++  "const telegramImages = prepareTelegramImages",
++  "batch publisher pre-send source validation",
++);
++requireSourceOrder(
++  batchPublisher,
++  "const telegramImages = prepareTelegramImages",
+   "await publishToTelegram",
+-  "batch publisher pre-send validation",
++  "batch publisher Telegram normalization",
+ );
+ forbidIncludes(batchPublisher, 'fetch(url, { method: "HEAD" })', "batch publisher");
+ forbidIncludes(batchPublisher, "assertRemoteImagesExist", "batch publisher");
+@@ -97,13 +109,25 @@ requireIncludes(
+   'import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";',
+   "local publisher",
+ );
++requireIncludes(
++  localPublisher,
++  'import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";',
++  "local publisher",
++);
+ requireIncludes(localPublisher, "loadValidatedLocalImages", "local publisher");
++requireIncludes(localPublisher, "prepareTelegramImages", "local publisher");
+ requireIncludes(localPublisher, "validatedImageBlob(validated)", "local publisher");
+ requireSourceOrder(
+   localPublisher,
+   "const validatedImages = await loadValidatedLocalImages",
++  "const telegramImages = prepareTelegramImages",
++  "local publisher source validation",
++);
++requireSourceOrder(
++  localPublisher,
++  "const telegramImages = prepareTelegramImages",
+   "await publishToTelegram",
+-  "local publisher image validation",
++  "local publisher Telegram normalization",
+ );
+ 
+ const imageIntegrity = await readFile(path.resolve("scripts/lib/image-integrity.js"), "utf8");
+@@ -117,7 +141,37 @@ for (const required of [
+   requireIncludes(imageIntegrity, required, "image integrity module");
+ }
+ 
++const telegramPhoto = await readFile(path.resolve("scripts/lib/telegram-photo.js"), "utf8");
++for (const required of [
++  "safeDimensionSum: 9_800",
++  "unfilterPngRows",
++  "resizeNearestNeighbor",
++  "telegramPhotoIsSafe",
++  "validateImageBytes(output",
++  "telegramNormalized",
++]) {
++  requireIncludes(telegramPhoto, required, "Telegram photo module");
++}
++requireSourceOrder(
++  telegramPhoto,
++  "const parsed = parsePng",
++  "const sourcePixels = unfilterPngRows",
++  "Telegram photo decode",
++);
++requireSourceOrder(
++  telegramPhoto,
++  "const resized = resizeNearestNeighbor",
++  "const output = encodePng",
++  "Telegram photo resize",
++);
++requireSourceOrder(
++  telegramPhoto,
++  "const output = encodePng",
++  "const candidate = validateImageBytes",
++  "Telegram photo output validation",
++);
++
+ console.log(
+   `OK syntax: ${files.length} JavaScript files; `
+-  + "publisher identity, GET image audit, deep validation and Blob upload are guarded",
++  + "publisher identity, GET image audit, deep validation, Telegram-safe normalization and Blob upload are guarded",
+ );
+diff --git a/scripts/check-telegram-photo.js b/scripts/check-telegram-photo.js
+new file mode 100644
+index 0000000..623a620
+--- /dev/null
++++ b/scripts/check-telegram-photo.js
+@@ -0,0 +1,145 @@
++#!/usr/bin/env node
++
++import { deflateSync } from "node:zlib";
++
++import { validateImageBytes } from "./lib/image-integrity.js";
++import {
++  normalizeTelegramPhoto,
++  TELEGRAM_PHOTO_LIMITS,
++  telegramPhotoIsSafe,
++} from "./lib/telegram-photo.js";
++
++const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
++const CRC_TABLE = buildCrcTable();
++
++function buildCrcTable() {
++  const table = new Uint32Array(256);
++  for (let value = 0; value < 256; value += 1) {
++    let crc = value;
++    for (let bit = 0; bit < 8; bit += 1) {
++      crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1);
++    }
++    table[value] = crc >>> 0;
++  }
++  return table;
++}
++
++function crc32(buffer) {
++  let crc = 0xffffffff;
++  for (const byte of buffer) crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
++  return (crc ^ 0xffffffff) >>> 0;
++}
++
++function chunk(type, data) {
++  const typeBytes = Buffer.from(type, "ascii");
++  const length = Buffer.alloc(4);
++  length.writeUInt32BE(data.length);
++  const crc = Buffer.alloc(4);
++  crc.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])));
++  return Buffer.concat([length, typeBytes, data, crc]);
++}
++
++function buildPng({ width, height, colorType = 2 }) {
++  const ihdr = Buffer.alloc(13);
++  ihdr.writeUInt32BE(width, 0);
++  ihdr.writeUInt32BE(height, 4);
++  ihdr[8] = 8;
++  ihdr[9] = colorType;
++  ihdr[10] = 0;
++  ihdr[11] = 0;
++  ihdr[12] = 0;
++
++  const bytesPerPixel = colorType === 6 ? 4 : colorType === 2 ? 3 : 1;
++  const rowBytes = width * bytesPerPixel;
++  const scanlines = Buffer.alloc(height * (rowBytes + 1));
++  for (let row = 0; row < height; row += 1) {
++    const offset = row * (rowBytes + 1);
++    scanlines[offset] = 0;
++    if (colorType === 2 || colorType === 6) {
++      for (let column = 0; column < width; column += 1) {
++        const pixel = offset + 1 + column * bytesPerPixel;
++        scanlines[pixel] = (row * 13 + column * 3) & 0xff;
++        scanlines[pixel + 1] = (row * 5 + column * 11) & 0xff;
++        scanlines[pixel + 2] = (row * 17 + column * 7) & 0xff;
++        if (bytesPerPixel === 4) scanlines[pixel + 3] = 0xff;
++      }
++    }
++  }
++
++  const chunks = [PNG_SIGNATURE, chunk("IHDR", ihdr)];
++  if (colorType === 3) chunks.push(chunk("PLTE", Buffer.from([0x20, 0x40, 0x60])));
++  chunks.push(chunk("IDAT", deflateSync(scanlines, { level: 9 })));
++  chunks.push(chunk("IEND", Buffer.alloc(0)));
++  return Buffer.concat(chunks);
++}
++
++function assert(condition, message) {
++  if (!condition) throw new Error(message);
++}
++
++function expectFailure(name, fn, expected) {
++  try {
++    fn();
++    throw new Error(`${name}: expected failure`);
++  } catch (error) {
++    if (!error.message.includes(expected)) {
++      throw new Error(`${name}: expected ${JSON.stringify(expected)}, got ${error.message}`);
++    }
++    console.log(`OK ${name}: ${expected}`);
++  }
++}
++
++let failures = 0;
++function run(name, fn) {
++  try {
++    fn();
++    console.log(`OK ${name}`);
++  } catch (error) {
++    failures += 1;
++    console.error(`FAIL ${name}: ${error.message}`);
++  }
++}
++
++run("M4-sized 1440x8625 PNG becomes Telegram-safe", () => {
++  const sourceBuffer = buildPng({ width: 1440, height: 8625, colorType: 2 });
++  const sourceSnapshot = Buffer.from(sourceBuffer);
++  const validated = validateImageBytes(sourceBuffer, { fileName: "m4.png" });
++  assert(!telegramPhotoIsSafe(validated), "M4-sized source should exceed Telegram dimension sum");
++
++  const normalized = normalizeTelegramPhoto(validated, { fileName: "m4.png", label: "M4 fixture" });
++  assert(normalized.telegramNormalized === true, "expected normalized flag");
++  assert(telegramPhotoIsSafe(normalized), "normalized photo must meet Telegram limits");
++  assert(normalized.width + normalized.height <= TELEGRAM_PHOTO_LIMITS.safeDimensionSum, "safe dimension sum was not respected");
++  assert(normalized.bytes <= TELEGRAM_PHOTO_LIMITS.maxBytes, "Telegram byte limit was not respected");
++  assert(sourceBuffer.equals(sourceSnapshot), "source PNG bytes were mutated");
++  assert(normalized.telegramSource.width === 1440 && normalized.telegramSource.height === 8625, "source dimensions were not recorded");
++
++  const sourceRatio = 1440 / 8625;
++  const outputRatio = normalized.width / normalized.height;
++  assert(Math.abs(sourceRatio - outputRatio) < 0.001, `aspect ratio drifted: ${sourceRatio} -> ${outputRatio}`);
++  validateImageBytes(normalized.buffer, { fileName: "m4.png", maxBytes: TELEGRAM_PHOTO_LIMITS.maxBytes });
++});
++
++run("safe 1180x1189 M6 PNG stays byte-for-byte unchanged", () => {
++  const sourceBuffer = buildPng({ width: 1180, height: 1189, colorType: 6 });
++  const validated = validateImageBytes(sourceBuffer, { fileName: "m6.png" });
++  assert(telegramPhotoIsSafe(validated), "M6 fixture should already be safe");
++
++  const prepared = normalizeTelegramPhoto(validated, { fileName: "m6.png", label: "M6 fixture" });
++  assert(prepared.telegramNormalized === false, "safe source must not be normalized");
++  assert(prepared.buffer === validated.buffer, "safe source must preserve the exact Buffer object");
++  assert(prepared.buffer.equals(sourceBuffer), "safe source bytes changed");
++});
++
++run("unsupported oversized indexed PNG is blocked before Telegram", () => {
++  const sourceBuffer = buildPng({ width: 1000, height: 9100, colorType: 3 });
++  const validated = validateImageBytes(sourceBuffer, { fileName: "indexed.png" });
++  expectFailure(
++    "indexed normalization",
++    () => normalizeTelegramPhoto(validated, { fileName: "indexed.png", label: "Indexed fixture" }),
++    "requires non-interlaced 8-bit RGB/RGBA",
++  );
++});
++
++if (failures > 0) process.exit(1);
++console.log("Telegram photo normalization fixtures passed.");
+diff --git a/scripts/lib/telegram-photo.js b/scripts/lib/telegram-photo.js
+new file mode 100644
+index 0000000..f7448a5
+--- /dev/null
++++ b/scripts/lib/telegram-photo.js
+@@ -0,0 +1,330 @@
++import { deflateSync, inflateSync } from "node:zlib";
++
++import { validateImageBytes } from "./image-integrity.js";
++
++export const TELEGRAM_PHOTO_LIMITS = Object.freeze({
++  maxBytes: 10 * 1024 * 1024,
++  maxDimensionSum: 10_000,
++  safeDimensionSum: 9_800,
++  maxAspectRatio: 20,
++});
++
++const PNG_SIGNATURE = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
++const MAX_DECODED_BYTES = 192 * 1024 * 1024;
++const CRC_TABLE = buildCrcTable();
++
++function buildCrcTable() {
++  const table = new Uint32Array(256);
++  for (let value = 0; value < 256; value += 1) {
++    let crc = value;
++    for (let bit = 0; bit < 8; bit += 1) {
++      crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1);
++    }
++    table[value] = crc >>> 0;
++  }
++  return table;
++}
++
++function crc32(buffer) {
++  let crc = 0xffffffff;
++  for (const byte of buffer) crc = CRC_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8);
++  return (crc ^ 0xffffffff) >>> 0;
++}
++
++function pngChunk(type, data) {
++  const typeBytes = Buffer.from(type, "ascii");
++  const length = Buffer.alloc(4);
++  length.writeUInt32BE(data.length);
++  const crc = Buffer.alloc(4);
++  crc.writeUInt32BE(crc32(Buffer.concat([typeBytes, data])));
++  return Buffer.concat([length, typeBytes, data, crc]);
++}
++
++function fail(label, message) {
++  throw new Error(`${label}: ${message}`);
++}
++
++function dimensionsAreSafe(width, height, limits = TELEGRAM_PHOTO_LIMITS) {
++  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) return false;
++  return width + height <= limits.maxDimensionSum
++    && Math.max(width / height, height / width) <= limits.maxAspectRatio;
++}
++
++export function telegramPhotoIsSafe(validated, limits = TELEGRAM_PHOTO_LIMITS) {
++  return Boolean(
++    validated
++    && Buffer.isBuffer(validated.buffer)
++    && validated.buffer.length <= limits.maxBytes
++    && dimensionsAreSafe(validated.width, validated.height, limits),
++  );
++}
++
++function parsePng(buffer, label) {
++  if (!Buffer.isBuffer(buffer) || buffer.length < 20 || !buffer.subarray(0, 8).equals(PNG_SIGNATURE)) {
++    fail(label, "expected validated PNG bytes");
++  }
++
++  let offset = 8;
++  let width = null;
++  let height = null;
++  let bitDepth = null;
++  let colorType = null;
++  let interlace = null;
++  const idat = [];
++
++  while (offset < buffer.length) {
++    if (offset + 12 > buffer.length) fail(label, "truncated PNG while preparing Telegram photo");
++    const length = buffer.readUInt32BE(offset);
++    const type = buffer.subarray(offset + 4, offset + 8).toString("ascii");
++    const dataStart = offset + 8;
++    const dataEnd = dataStart + length;
++    if (dataEnd + 4 > buffer.length) fail(label, "truncated PNG while preparing Telegram photo");
++
++    if (type === "IHDR") {
++      width = buffer.readUInt32BE(dataStart);
++      height = buffer.readUInt32BE(dataStart + 4);
++      bitDepth = buffer[dataStart + 8];
++      colorType = buffer[dataStart + 9];
++      interlace = buffer[dataStart + 12];
++    } else if (type === "IDAT") {
++      idat.push(buffer.subarray(dataStart, dataEnd));
++    } else if (type === "IEND") {
++      break;
++    }
++    offset = dataEnd + 4;
++  }
++
++  if (!width || !height || idat.length === 0) fail(label, "incomplete PNG structure");
++  if (bitDepth !== 8 || ![2, 6].includes(colorType) || interlace !== 0) {
++    fail(
++      label,
++      `oversized PNG cannot be normalized safely: requires non-interlaced 8-bit RGB/RGBA, got bitDepth=${bitDepth}, colorType=${colorType}, interlace=${interlace}`,
++    );
++  }
++
++  return {
++    width,
++    height,
++    bitDepth,
++    colorType,
++    bytesPerPixel: colorType === 6 ? 4 : 3,
++    compressed: Buffer.concat(idat),
++  };
++}
++
++function paethPredictor(left, up, upperLeft) {
++  const prediction = left + up - upperLeft;
++  const leftDistance = Math.abs(prediction - left);
++  const upDistance = Math.abs(prediction - up);
++  const upperLeftDistance = Math.abs(prediction - upperLeft);
++  if (leftDistance <= upDistance && leftDistance <= upperLeftDistance) return left;
++  if (upDistance <= upperLeftDistance) return up;
++  return upperLeft;
++}
++
++function unfilterPngRows(parsed, label) {
++  const rowBytes = parsed.width * parsed.bytesPerPixel;
++  const expectedBytes = parsed.height * (rowBytes + 1);
++  let encoded;
++  try {
++    encoded = inflateSync(parsed.compressed, { maxOutputLength: MAX_DECODED_BYTES });
++  } catch (error) {
++    fail(label, `PNG zlib decode failed during Telegram normalization: ${error.message}`);
++  }
++  if (encoded.length !== expectedBytes) {
++    fail(label, `decoded PNG size mismatch: ${encoded.length} != ${expectedBytes}`);
++  }
++
++  const pixels = Buffer.allocUnsafe(parsed.height * rowBytes);
++  for (let row = 0; row < parsed.height; row += 1) {
++    const encodedOffset = row * (rowBytes + 1);
++    const filter = encoded[encodedOffset];
++    const source = encoded.subarray(encodedOffset + 1, encodedOffset + 1 + rowBytes);
++    const targetOffset = row * rowBytes;
++
++    for (let columnByte = 0; columnByte < rowBytes; columnByte += 1) {
++      const left = columnByte >= parsed.bytesPerPixel
++        ? pixels[targetOffset + columnByte - parsed.bytesPerPixel]
++        : 0;
++      const up = row > 0 ? pixels[targetOffset + columnByte - rowBytes] : 0;
++      const upperLeft = row > 0 && columnByte >= parsed.bytesPerPixel
++        ? pixels[targetOffset + columnByte - rowBytes - parsed.bytesPerPixel]
++        : 0;
++
++      let predictor = 0;
++      if (filter === 1) predictor = left;
++      else if (filter === 2) predictor = up;
++      else if (filter === 3) predictor = Math.floor((left + up) / 2);
++      else if (filter === 4) predictor = paethPredictor(left, up, upperLeft);
++      else if (filter !== 0) fail(label, `unsupported PNG row filter ${filter}`);
++
++      pixels[targetOffset + columnByte] = (source[columnByte] + predictor) & 0xff;
++    }
++  }
++  return pixels;
++}
++
++function resizeNearestNeighbor(source, {
++  sourceWidth,
++  sourceHeight,
++  targetWidth,
++  targetHeight,
++  bytesPerPixel,
++}) {
++  const output = Buffer.allocUnsafe(targetWidth * targetHeight * bytesPerPixel);
++  const sourceXOffsets = new Uint32Array(targetWidth);
++  for (let targetX = 0; targetX < targetWidth; targetX += 1) {
++    sourceXOffsets[targetX] = Math.min(
++      sourceWidth - 1,
++      Math.floor(targetX * sourceWidth / targetWidth),
++    ) * bytesPerPixel;
++  }
++
++  for (let targetY = 0; targetY < targetHeight; targetY += 1) {
++    const sourceY = Math.min(sourceHeight - 1, Math.floor(targetY * sourceHeight / targetHeight));
++    const sourceRowOffset = sourceY * sourceWidth * bytesPerPixel;
++    const targetRowOffset = targetY * targetWidth * bytesPerPixel;
++
++    for (let targetX = 0; targetX < targetWidth; targetX += 1) {
++      const sourceOffset = sourceRowOffset + sourceXOffsets[targetX];
++      const targetOffset = targetRowOffset + targetX * bytesPerPixel;
++      output[targetOffset] = source[sourceOffset];
++      output[targetOffset + 1] = source[sourceOffset + 1];
++      output[targetOffset + 2] = source[sourceOffset + 2];
++      if (bytesPerPixel === 4) output[targetOffset + 3] = source[sourceOffset + 3];
++    }
++  }
++  return output;
++}
++
++function encodePng({ width, height, colorType, bytesPerPixel, pixels }) {
++  const ihdr = Buffer.alloc(13);
++  ihdr.writeUInt32BE(width, 0);
++  ihdr.writeUInt32BE(height, 4);
++  ihdr[8] = 8;
++  ihdr[9] = colorType;
++  ihdr[10] = 0;
++  ihdr[11] = 0;
++  ihdr[12] = 0;
++
++  const rowBytes = width * bytesPerPixel;
++  const scanlines = Buffer.allocUnsafe(height * (rowBytes + 1));
++  for (let row = 0; row < height; row += 1) {
++    const scanlineOffset = row * (rowBytes + 1);
++    scanlines[scanlineOffset] = 0;
++    pixels.copy(scanlines, scanlineOffset + 1, row * rowBytes, (row + 1) * rowBytes);
++  }
++
++  return Buffer.concat([
++    PNG_SIGNATURE,
++    pngChunk("IHDR", ihdr),
++    pngChunk("IDAT", deflateSync(scanlines, { level: 9 })),
++    pngChunk("IEND", Buffer.alloc(0)),
++  ]);
++}
++
++function initialScale(validated, limits) {
++  const dimensionScale = limits.safeDimensionSum / (validated.width + validated.height);
++  const byteScale = validated.bytes > limits.maxBytes
++    ? Math.sqrt(limits.maxBytes / validated.bytes) * 0.9
++    : 1;
++  return Math.min(1, dimensionScale, byteScale);
++}
++
++function nextScale(currentScale, candidate, limits) {
++  const dimensionScale = limits.safeDimensionSum / (candidate.width + candidate.height);
++  const byteScale = candidate.bytes > limits.maxBytes
++    ? Math.sqrt(limits.maxBytes / candidate.bytes) * 0.88
++    : 0.92;
++  return currentScale * Math.min(0.92, dimensionScale, byteScale);
++}
++
++export function normalizeTelegramPhoto(validated, {
++  fileName = "photo.png",
++  label = fileName,
++  limits = TELEGRAM_PHOTO_LIMITS,
++} = {}) {
++  if (!validated || !Buffer.isBuffer(validated.buffer)) {
++    fail(label, "validated image bytes are required");
++  }
++
++  const aspectRatio = Math.max(validated.width / validated.height, validated.height / validated.width);
++  if (!Number.isFinite(aspectRatio) || aspectRatio > limits.maxAspectRatio) {
++    fail(label, `Telegram photo aspect ratio exceeds ${limits.maxAspectRatio}:1`);
++  }
++
++  if (telegramPhotoIsSafe(validated, limits)) {
++    return {
++      ...validated,
++      telegramNormalized: false,
++      telegramSource: Object.freeze({
++        bytes: validated.bytes,
++        width: validated.width,
++        height: validated.height,
++      }),
++    };
++  }
++
++  if (validated.format !== "png") {
++    fail(label, `oversized ${validated.format} cannot be normalized without changing the source; provide a Telegram-safe PNG`);
++  }
++
++  const parsed = parsePng(validated.buffer, label);
++  const sourcePixels = unfilterPngRows(parsed, label);
++  let scale = initialScale(validated, limits);
++
++  for (let attempt = 1; attempt <= 6; attempt += 1) {
++    const targetWidth = Math.max(1, Math.floor(parsed.width * scale));
++    const targetHeight = Math.max(1, Math.floor(parsed.height * scale));
++    const resized = resizeNearestNeighbor(sourcePixels, {
++      sourceWidth: parsed.width,
++      sourceHeight: parsed.height,
++      targetWidth,
++      targetHeight,
++      bytesPerPixel: parsed.bytesPerPixel,
++    });
++    const output = encodePng({
++      width: targetWidth,
++      height: targetHeight,
++      colorType: parsed.colorType,
++      bytesPerPixel: parsed.bytesPerPixel,
++      pixels: resized,
++    });
++    const candidate = validateImageBytes(output, {
++      fileName,
++      label: `${label} normalized Telegram copy`,
++      maxBytes: Math.max(limits.maxBytes, output.length),
++    });
++
++    if (telegramPhotoIsSafe(candidate, limits)) {
++      return {
++        ...candidate,
++        telegramNormalized: true,
++        telegramSource: Object.freeze({
++          bytes: validated.bytes,
++          width: validated.width,
++          height: validated.height,
++        }),
++        telegramReason: validated.width + validated.height > limits.maxDimensionSum
++          ? "dimension-sum"
++          : "file-size",
++        telegramAttempt: attempt,
++      };
++    }
++    scale = nextScale(scale, candidate, limits);
++  }
++
++  fail(label, "could not create a Telegram-safe PNG after 6 resize attempts");
++}
++
++export function telegramPhotoSummary(validated) {
++  return {
++    format: validated.format,
++    bytes: validated.bytes,
++    width: validated.width ?? null,
++    height: validated.height ?? null,
++    normalized: Boolean(validated.telegramNormalized),
++    source: validated.telegramSource ?? null,
++    reason: validated.telegramReason ?? null,
++  };
++}
+diff --git a/scripts/publish-all-news.js b/scripts/publish-all-news.js
+index b7778b7..3be7ae0 100644
+--- a/scripts/publish-all-news.js
++++ b/scripts/publish-all-news.js
+@@ -22,6 +22,7 @@ import {
+ import { createGitHubClient } from "./lib/github-client.js";
+ import { checkpointPublishedState } from "./lib/git-checkpoint.js";
+ import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";
++import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
+ import { publishToTelegram } from "./lib/telegram-client.js";
+ 
+ const MAX_POSTS_PER_RUN = Math.max(1, Math.min(20, Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 20)));
+@@ -111,6 +112,24 @@ function imageIntegritySummary(images) {
+   }));
+ }
+ 
++function prepareTelegramImages(patchnote, validatedImages) {
++  return validatedImages.map(({ name, url, validated }) => ({
++    name,
++    url,
++    validated: normalizeTelegramPhoto(validated, {
++      fileName: name,
++      label: `${patchnote.key} image ${name}`,
++    }),
++  }));
++}
++
++function telegramDeliverySummary(images) {
++  return images.map(({ name, validated }) => ({
++    name,
++    ...telegramPhotoSummary(validated),
++  }));
++}
++
+ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
+   const policy = assertPublicationPolicy({
+     frontMatter: patchnote.frontMatter,
+@@ -120,9 +139,10 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
+ 
+   // Re-fetch immediately before Telegram. This prevents a file from changing
+   // between the queue audit and the actual send, and ensures Telegram receives
+-  // the exact bytes that uNews validated.
++  // a validated source plus a deterministic in-memory safe copy when needed.
+   const validatedImages = await loadValidatedRemoteImages(patchnote, policy.imageNames);
+-  const mediaItems = validatedImages.map(({ name, validated }) => ({
++  const telegramImages = prepareTelegramImages(patchnote, validatedImages);
++  const mediaItems = telegramImages.map(({ name, validated }) => ({
+     name,
+     loadBlob: () => validatedImageBlob(validated),
+   }));
+@@ -134,7 +154,8 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
+       {
+         method,
+         images: policy.imageNames,
+-        imageIntegrity: imageIntegritySummary(validatedImages),
++        sourceImageIntegrity: imageIntegritySummary(validatedImages),
++        telegramImageDelivery: telegramDeliverySummary(telegramImages),
+         captionLength: policy.captionText.length,
+         captionWasTruncated: policy.captionWasTruncated,
+         link: policy.link,
+diff --git a/scripts/publish-from-projects.js b/scripts/publish-from-projects.js
+index ae60333..ade3bd4 100644
+--- a/scripts/publish-from-projects.js
++++ b/scripts/publish-from-projects.js
+@@ -11,6 +11,7 @@ import {
+ } from "./patchnote-policy.js";
+ import { parsePatchnote } from "./lib/front-matter.js";
+ import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";
++import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
+ import { publishToTelegram } from "./lib/telegram-client.js";
+ 
+ function printUsage() {
+@@ -119,6 +120,17 @@ function imageSummary(images) {
+   }));
+ }
+ 
++function prepareTelegramImages(validatedImages) {
++  return validatedImages.map(({ name, filePath, validated }) => ({
++    name,
++    filePath,
++    validated: normalizeTelegramPhoto(validated, {
++      fileName: name,
++      label: `${name} (${filePath})`,
++    }),
++  }));
++}
++
+ async function main() {
+   const args = parseArgs(process.argv.slice(2));
+   if (args.help || !args.filePath) {
+@@ -135,14 +147,19 @@ async function main() {
+   const policy = assertPublicationPolicy({ frontMatter, body, label: markdownPath });
+   const imagePaths = resolveImagePaths(markdownPath, policy.imageNames);
+   const validatedImages = await loadValidatedLocalImages(imagePaths, policy.imageNames);
++  const telegramImages = prepareTelegramImages(validatedImages);
+ 
+-  const method = validatedImages.length > 1 ? "sendMediaGroup" : validatedImages.length === 1 ? "sendPhoto" : "sendMessage";
++  const method = telegramImages.length > 1 ? "sendMediaGroup" : telegramImages.length === 1 ? "sendPhoto" : "sendMessage";
+ 
+   const summary = {
+     method,
+     patchnote: markdownPath,
+     images: policy.imageNames,
+-    imageIntegrity: imageSummary(validatedImages),
++    sourceImageIntegrity: imageSummary(validatedImages),
++    telegramImageDelivery: telegramImages.map(({ name, validated }) => ({
++      name,
++      ...telegramPhotoSummary(validated),
++    })),
+     captionLength: policy.captionText.length,
+     captionWasTruncated: policy.captionWasTruncated,
+     messageLength: policy.messageText.length,
+@@ -163,7 +180,7 @@ async function main() {
+     throw new Error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID are required unless --dry-run is used.");
+   }
+ 
+-  const mediaItems = validatedImages.map(({ name, validated }) => ({
++  const mediaItems = telegramImages.map(({ name, validated }) => ({
+     name,
+     loadBlob: () => validatedImageBlob(validated),
+   }));
+diff --git a/tools/release-screenshot/capture.mjs b/tools/release-screenshot/capture.mjs
+new file mode 100644
+index 0000000..3be724a
+--- /dev/null
++++ b/tools/release-screenshot/capture.mjs
+@@ -0,0 +1,89 @@
++import { spawn } from "node:child_process";
++import { mkdir, writeFile } from "node:fs/promises";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++
++import { chromium } from "@playwright/test";
++
++const here = path.dirname(fileURLToPath(import.meta.url));
++const root = path.resolve(here, "../..");
++const outputDir = path.join(root, "artifacts/release");
++const screenshotName = "unews-v0-3-8-telegram-photo-normalization.png";
++const screenshotPath = path.join(outputDir, screenshotName);
++const url = "http://127.0.0.1:4173/";
++const commit = process.env.SCREENSHOT_COMMIT || "local-uncommitted";
++
++await mkdir(outputDir, { recursive: true });
++
++const server = spawn("python3", ["-m", "http.server", "4173", "--bind", "127.0.0.1"], {
++  cwd: root,
++  stdio: ["ignore", "pipe", "pipe"],
++});
++
++async function waitForServer() {
++  for (let attempt = 1; attempt <= 60; attempt += 1) {
++    try {
++      const response = await fetch(url, { cache: "no-store" });
++      if (response.ok) return;
++    } catch {
++      // Server is still starting.
++    }
++    await new Promise((resolve) => setTimeout(resolve, 250));
++  }
++  throw new Error("Local uNews release page did not start");
++}
++
++const assertions = [
++  "0.3.8",
++  "1440 × 8625",
++  "≤ 9800 px",
++  "≤ 10 МБ",
++  "Не изменяется",
++];
++
++let browser;
++try {
++  await waitForServer();
++  browser = await chromium.launch({ headless: true });
++  const page = await browser.newPage({
++    viewport: { width: 1280, height: 1000 },
++    deviceScaleFactor: 1,
++  });
++  await page.goto(url, { waitUntil: "networkidle" });
++
++  const target = page.locator("#telegram-photo-normalization");
++  await target.waitFor({ state: "visible", timeout: 30_000 });
++  const text = await target.innerText();
++  for (const expected of assertions) {
++    if (!text.includes(expected)) throw new Error(`Release proof is missing ${JSON.stringify(expected)}`);
++  }
++
++  await target.screenshot({ path: screenshotPath });
++  const box = await target.boundingBox();
++  if (!box || box.width < 600 || box.height < 300) {
++    throw new Error(`Unexpected release screenshot bounds: ${JSON.stringify(box)}`);
++  }
++
++  const manifest = {
++    schemaVersion: 1,
++    project: "uNews",
++    version: "0.3.8",
++    commit,
++    capturedAt: new Date().toISOString(),
++    url,
++    selector: "#telegram-photo-normalization",
++    screenshot: screenshotName,
++    viewport: { width: 1280, height: 1000 },
++    bounds: box,
++    assertions,
++  };
++  await writeFile(
++    path.join(outputDir, "release-screenshot.json"),
++    `${JSON.stringify(manifest, null, 2)}\n`,
++    "utf8",
++  );
++  console.log(JSON.stringify(manifest, null, 2));
++} finally {
++  await browser?.close();
++  server.kill("SIGTERM");
++}
+diff --git a/tools/release-screenshot/package.json b/tools/release-screenshot/package.json
+new file mode 100644
+index 0000000..d25319e
+--- /dev/null
++++ b/tools/release-screenshot/package.json
+@@ -0,0 +1,15 @@
++{
++  "name": "unews-release-screenshot",
++  "version": "0.3.8",
++  "private": true,
++  "type": "module",
++  "scripts": {
++    "capture": "node capture.mjs"
++  },
++  "devDependencies": {
++    "@playwright/test": "1.61.1"
++  },
++  "engines": {
++    "node": ">=22"
++  }
++}
+diff --git a/tools/release/prepare-release.mjs b/tools/release/prepare-release.mjs
+new file mode 100644
+index 0000000..06486c1
+--- /dev/null
++++ b/tools/release/prepare-release.mjs
+@@ -0,0 +1,125 @@
++import { copyFile, mkdir, readFile, rm, writeFile } from "node:fs/promises";
++import path from "node:path";
++import { fileURLToPath } from "node:url";
++
++const here = path.dirname(fileURLToPath(import.meta.url));
++const root = path.resolve(here, "../..");
++const markerPath = path.join(root, "news/.prepare-release.json");
++const screenshotManifestPath = path.join(root, "artifacts/release/release-screenshot.json");
++
++const marker = JSON.parse(await readFile(markerPath, "utf8"));
++const screenshot = JSON.parse(await readFile(screenshotManifestPath, "utf8"));
++const expectedCommit = process.env.SCREENSHOT_COMMIT || process.env.GITHUB_SHA;
++
++if (!expectedCommit) throw new Error("Expected release source commit is missing");
++if (screenshot.commit !== expectedCommit) {
++  throw new Error(`Screenshot commit ${screenshot.commit} does not match ${expectedCommit}`);
++}
++if (screenshot.version !== marker.version) {
++  throw new Error(`Screenshot version ${screenshot.version} does not match marker ${marker.version}`);
++}
++
++const queuedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
++const date = queuedAt.slice(0, 10);
++const safeVersion = marker.version.replace(/[^0-9A-Za-z]+/g, "-").replace(/^-|-$/g, "").toLowerCase();
++const baseName = `${date}-unews-v${safeVersion}-${marker.slug}`;
++const imageName = `${baseName}.png`;
++const patchnoteName = `${baseName}.md`;
++const sourceImage = path.join(root, "artifacts/release", screenshot.screenshot);
++const targetImage = path.join(root, "news", imageName);
++const targetPatchnote = path.join(root, "news", patchnoteName);
++const releaseDirectory = path.join(root, "archive/development", marker.version);
++const archiveName = `unews-v${safeVersion}-evidence.zip`;
++const releaseManifestPath = path.join(releaseDirectory, "release.json");
++
++function bulletList(items) {
++  return items.map((item) => `- ${item};`).join("\n").replace(/;$/, ".");
++}
++
++await mkdir(path.join(root, "news"), { recursive: true });
++await mkdir(releaseDirectory, { recursive: true });
++await copyFile(sourceImage, targetImage);
++
++const frontMatter = `---
++type: ${marker.type}
++project: uNews
++series: unews
++title: ${marker.title}
++version: ${marker.version}
++queued_at: ${queuedAt}
++repo_url: https://github.com/sunpole/uNews
++web_url: https://sunpole.github.io/uNews/
++image: ${imageName}
++image_text: ${marker.imageText}
++image_source: playwright
++image_target: selector/${screenshot.selector}
++image_commit: ${screenshot.commit}
++image_captured_at: ${screenshot.capturedAt}
++---`;
++
++const patchnote = `${frontMatter}
++
++# ${marker.title}
++
++${marker.summary}
++
++Что исправлено:
++
++${bulletList(marker.features)}
++
++Проверенный результат:
++
++${bulletList(marker.controlFacts)}
++
++${marker.nextStep}
++
++Короткий текст для Telegram:
++
++${marker.telegramText}
++`;
++
++await writeFile(targetPatchnote, patchnote, "utf8");
++
++const readmePath = path.join(root, "README.md");
++let readme = await readFile(readmePath, "utf8");
++readme = readme.replace(/Текущая версия: \*\*[^*]+\*\*\./, `Текущая версия: **${marker.version}**.`);
++const historyBullet = "- автоматически создавать безопасную уменьшенную PNG-копию только для Telegram, сохраняя исходное изображение без изменений;";
++if (!readme.includes(historyBullet)) {
++  const anchor = "- передавать Telegram уже проверенные bytes как multipart Blob.";
++  if (!readme.includes(anchor)) throw new Error("README image-integrity anchor was not found");
++  readme = readme.replace(anchor, `${anchor}\n${historyBullet}`);
++}
++if (!readme.includes("docs/TELEGRAM_PHOTO_NORMALIZATION.md")) {
++  const anchor = "Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md). Точный контракт изображений: [docs/IMAGE_INTEGRITY.md](docs/IMAGE_INTEGRITY.md).";
++  readme = readme.replace(
++    anchor,
++    `${anchor} Нормализация длинных PNG: [docs/TELEGRAM_PHOTO_NORMALIZATION.md](docs/TELEGRAM_PHOTO_NORMALIZATION.md).`,
++  );
++}
++await writeFile(readmePath, readme, "utf8");
++
++const releaseManifest = {
++  schemaVersion: 1,
++  project: "uNews",
++  version: marker.version,
++  tag: `v${marker.version}`,
++  title: `uNews v${marker.version}`,
++  prerelease: false,
++  sourceCommit: screenshot.commit,
++  createdAt: queuedAt,
++  patchnote: path.relative(root, targetPatchnote).replaceAll("\\", "/"),
++  image: path.relative(root, targetImage).replaceAll("\\", "/"),
++  archive: path.relative(root, path.join(releaseDirectory, archiveName)).replaceAll("\\", "/"),
++  screenshotManifest: path.relative(root, screenshotManifestPath).replaceAll("\\", "/"),
++  telegramText: marker.telegramText,
++};
++await writeFile(releaseManifestPath, `${JSON.stringify(releaseManifest, null, 2)}\n`, "utf8");
++await rm(markerPath);
++
++console.log(JSON.stringify({
++  queuedAt,
++  patchnote: releaseManifest.patchnote,
++  image: releaseManifest.image,
++  releaseManifest: path.relative(root, releaseManifestPath),
++  archive: releaseManifest.archive,
++}, null, 2));

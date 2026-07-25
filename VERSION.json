@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "project": "uNews",
+  "version": "0.3.8",
+  "releaseDate": "2026-07-25",
+  "status": "telegram-photo-normalization",
+  "productionReady": true,
+  "summary": {
+    "ru": "uNews сохраняет исходные изображения без изменений, но автоматически создаёт безопасную уменьшенную PNG-копию в памяти, если Telegram отклонит исходные размеры sendPhoto.",
+    "en": "uNews preserves source images unchanged and creates a safe resized PNG copy in memory when the source exceeds Telegram sendPhoto limits."
+  },
+  "verified": {
+    "sourcePreserved": true,
+    "maxPhotoBytes": 10485760,
+    "maxDimensionSum": 10000,
+    "safeDimensionSum": 9800,
+    "maxAspectRatio": 20,
+    "m4Regression": "1440x8625",
+    "safeRegression": "1180x1189"
+  },
+  "releasePolicy": {
+    "rollbackBranch": "release/v{version}",
+    "tag": "v{version}",
+    "githubReleaseRequired": true,
+    "releaseNewsRequired": true,
+    "telegramQueueRequired": true,
+    "permanentEvidenceArchiveRequired": true,
+    "publishedTagsAreImmutable": true
+  },
+  "nextTarget": {
+    "version": "0.3.9",
+    "ru": "Продолжить укрепление очереди только по фактическим ошибкам публикации.",
+    "en": "Continue queue hardening only from factual publication failures."
+  }
+}

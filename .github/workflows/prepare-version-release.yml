@@ -1,0 +1,185 @@
+name: Prepare uNews version release
+
+on:
+  push:
+    branches:
+      - 'fix/**'
+      - 'feature/**'
+    paths:
+      - 'news/.prepare-release.json'
+      - 'tools/release/**'
+      - 'tools/release-screenshot/**'
+      - '.github/workflows/prepare-version-release.yml'
+  pull_request:
+    paths:
+      - 'news/.prepare-release.json'
+      - 'tools/release/**'
+      - 'tools/release-screenshot/**'
+      - '.github/workflows/prepare-version-release.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      TARGET_BRANCH: ${{ github.event.pull_request.head.ref || github.ref_name }}
+      SCREENSHOT_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+
+    steps:
+      - name: Checkout exact feature branch
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Detect release marker
+        id: marker
+        shell: bash
+        run: |
+          if [ -f news/.prepare-release.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Node.js
+        if: steps.marker.outputs.exists == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+
+      - name: Read release version
+        if: steps.marker.outputs.exists == 'true'
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE' >> "$GITHUB_ENV"
+          import fs from 'node:fs';
+          const marker = JSON.parse(fs.readFileSync('news/.prepare-release.json', 'utf8'));
+          console.log(`RELEASE_VERSION=${marker.version}`);
+          NODE
+
+      - name: Run complete uNews test suite
+        if: steps.marker.outputs.exists == 'true'
+        shell: bash
+        run: |
+          mkdir -p artifacts/release
+          npm test 2>&1 | tee artifacts/release/npm-test.log
+
+      - name: Install isolated screenshot tooling
+        if: steps.marker.outputs.exists == 'true'
+        working-directory: tools/release-screenshot
+        run: npm install --package-lock=false --ignore-scripts --no-audit --no-fund
+
+      - name: Install Chromium
+        if: steps.marker.outputs.exists == 'true'
+        working-directory: tools/release-screenshot
+        run: npx playwright install --with-deps chromium > /tmp/playwright-install.log 2>&1
+
+      - name: Capture factual release screenshot
+        if: steps.marker.outputs.exists == 'true'
+        working-directory: tools/release-screenshot
+        shell: bash
+        run: |
+          set +e
+          npm run capture > ../../artifacts/release/capture.log 2>&1
+          status=$?
+          tail -n 120 ../../artifacts/release/capture.log
+          exit "$status"
+
+      - name: Upload release screenshot diagnostics
+        if: always() && steps.marker.outputs.exists == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: unews-release-${{ github.event.pull_request.number || github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/release/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Create patchnote image and release manifest
+        if: steps.marker.outputs.exists == 'true'
+        run: node tools/release/prepare-release.mjs
+
+      - name: Create source diff and permanent evidence ZIP
+        if: steps.marker.outputs.exists == 'true'
+        shell: bash
+        run: |
+          release_dir="archive/development/${RELEASE_VERSION}"
+          mkdir -p "$release_dir"
+          git fetch origin main
+          git diff --binary "origin/main...HEAD" -- \
+            . ':!archive/development/**' ':!news/.prepare-release.json' \
+            > "$release_dir/source.diff"
+
+          python3 - <<'PY'
+          import json
+          import pathlib
+          import zipfile
+
+          root = pathlib.Path('.').resolve()
+          release_dir = root / 'archive' / 'development' / '${{ env.RELEASE_VERSION }}'
+          manifest_path = release_dir / 'release.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          archive_path = root / manifest['archive']
+          archive_path.parent.mkdir(parents=True, exist_ok=True)
+
+          inputs = [
+              root / 'artifacts' / 'release',
+              root / manifest['patchnote'],
+              root / manifest['image'],
+              manifest_path,
+              release_dir / 'source.diff',
+              root / 'VERSION.json',
+              root / 'CHANGELOG.md',
+              root / 'package.json',
+              root / 'README.md',
+              root / 'docs' / 'TELEGRAM_PHOTO_NORMALIZATION.md',
+          ]
+
+          with zipfile.ZipFile(archive_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
+              seen = set()
+              for item in inputs:
+                  if not item.exists():
+                      continue
+                  paths = [item] if item.is_file() else sorted(path for path in item.rglob('*') if path.is_file())
+                  for path in paths:
+                      if path.resolve() == archive_path.resolve():
+                          continue
+                      relative = path.relative_to(root).as_posix()
+                      if relative in seen:
+                          continue
+                      seen.add(relative)
+                      archive.write(path, relative)
+          print(f'Created {archive_path.relative_to(root)} with {len(seen)} files')
+          PY
+
+      - name: Commit release news and evidence to feature branch
+        if: steps.marker.outputs.exists == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A README.md news/ archive/development/
+          git commit -m "release: prepare uNews ${RELEASE_VERSION} checkpoint"
+          local_sha="$(git rev-parse HEAD)"
+
+          if git push origin HEAD:${TARGET_BRANCH}; then
+            exit 0
+          fi
+
+          echo "Initial push returned a failure; checking the remote head with retries."
+          for attempt in 1 2 3 4 5 6; do
+            remote_sha="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+            if [ "$remote_sha" = "$local_sha" ]; then
+              echo "Generated release commit is the remote branch head (attempt ${attempt})."
+              exit 0
+            fi
+            echo "Attempt ${attempt}: remote=${remote_sha:-missing}, expected=${local_sha}"
+            sleep 2
+          done
+
+          exit 1

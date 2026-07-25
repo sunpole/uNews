@@ -74,7 +74,13 @@ requireIncludes(
   'import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";',
   "batch publisher",
 );
+requireIncludes(
+  batchPublisher,
+  'import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";',
+  "batch publisher",
+);
 requireIncludes(batchPublisher, "loadValidatedRemoteImages", "batch publisher");
+requireIncludes(batchPublisher, "prepareTelegramImages", "batch publisher");
 requireIncludes(batchPublisher, "validatedImageBlob(validated)", "batch publisher");
 requireSourceOrder(
   batchPublisher,
@@ -85,8 +91,14 @@ requireSourceOrder(
 requireSourceOrder(
   batchPublisher,
   "const validatedImages = await loadValidatedRemoteImages",
+  "const telegramImages = prepareTelegramImages",
+  "batch publisher pre-send source validation",
+);
+requireSourceOrder(
+  batchPublisher,
+  "const telegramImages = prepareTelegramImages",
   "await publishToTelegram",
-  "batch publisher pre-send validation",
+  "batch publisher Telegram normalization",
 );
 forbidIncludes(batchPublisher, 'fetch(url, { method: "HEAD" })', "batch publisher");
 forbidIncludes(batchPublisher, "assertRemoteImagesExist", "batch publisher");
@@ -97,13 +109,25 @@ requireIncludes(
   'import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";',
   "local publisher",
 );
+requireIncludes(
+  localPublisher,
+  'import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";',
+  "local publisher",
+);
 requireIncludes(localPublisher, "loadValidatedLocalImages", "local publisher");
+requireIncludes(localPublisher, "prepareTelegramImages", "local publisher");
 requireIncludes(localPublisher, "validatedImageBlob(validated)", "local publisher");
 requireSourceOrder(
   localPublisher,
   "const validatedImages = await loadValidatedLocalImages",
+  "const telegramImages = prepareTelegramImages",
+  "local publisher source validation",
+);
+requireSourceOrder(
+  localPublisher,
+  "const telegramImages = prepareTelegramImages",
   "await publishToTelegram",
-  "local publisher image validation",
+  "local publisher Telegram normalization",
 );
 
 const imageIntegrity = await readFile(path.resolve("scripts/lib/image-integrity.js"), "utf8");
@@ -117,7 +141,37 @@ for (const required of [
   requireIncludes(imageIntegrity, required, "image integrity module");
 }
 
+const telegramPhoto = await readFile(path.resolve("scripts/lib/telegram-photo.js"), "utf8");
+for (const required of [
+  "safeDimensionSum: 9_800",
+  "unfilterPngRows",
+  "resizeNearestNeighbor",
+  "telegramPhotoIsSafe",
+  "validateImageBytes(output",
+  "telegramNormalized",
+]) {
+  requireIncludes(telegramPhoto, required, "Telegram photo module");
+}
+requireSourceOrder(
+  telegramPhoto,
+  "const parsed = parsePng",
+  "const sourcePixels = unfilterPngRows",
+  "Telegram photo decode",
+);
+requireSourceOrder(
+  telegramPhoto,
+  "const resized = resizeNearestNeighbor",
+  "const output = encodePng",
+  "Telegram photo resize",
+);
+requireSourceOrder(
+  telegramPhoto,
+  "const output = encodePng",
+  "const candidate = validateImageBytes",
+  "Telegram photo output validation",
+);
+
 console.log(
   `OK syntax: ${files.length} JavaScript files; `
-  + "publisher identity, GET image audit, deep validation and Blob upload are guarded",
+  + "publisher identity, GET image audit, deep validation, Telegram-safe normalization and Blob upload are guarded",
 );

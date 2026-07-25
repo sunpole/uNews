@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "project": "uNews",
+  "version": "0.3.8",
+  "tag": "v0.3.8",
+  "title": "uNews v0.3.8",
+  "prerelease": false,
+  "sourceCommit": "d5d59412fb7f6c96d8133587b62d9718da64491c",
+  "createdAt": "2026-07-25T05:36:27Z",
+  "patchnote": "news/2026-07-25-unews-v0-3-8-telegram-photo-normalization.md",
+  "image": "news/2026-07-25-unews-v0-3-8-telegram-photo-normalization.png",
+  "archive": "archive/development/0.3.8/unews-v0-3-8-evidence.zip",
+  "screenshotManifest": "artifacts/release/release-screenshot.json",
+  "telegramText": "uNews 0.3.8 исправил остановку очереди на длинных скриншотах. Исходный PNG сохраняется без изменений, а для Telegram бот автоматически создаёт безопасную копию и снова проверяет её перед отправкой."
+}
