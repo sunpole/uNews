@@ -6,7 +6,7 @@
 
 **uNews** — единая система публикации новостей, патчноутов и отчётов разработки по проектам Антона.
 
-Текущая версия: **0.3.7**. Она проверяет реальные bytes и внутреннюю структуру каждого изображения до Telegram. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
+Текущая версия: **0.3.8**. Она проверяет реальные bytes и внутреннюю структуру каждого изображения до Telegram. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
 
 Главная идея: каждый проект хранит свои новости в папке `news/`, а uNews забирает эти патчноуты и публикует их в Telegram-канал через бота.
 
@@ -28,6 +28,7 @@
 - проверять сигнатуру, формат, размеры, PNG CRC и zlib-декодирование;
 - повторно проверять файл непосредственно перед Telegram;
 - передавать Telegram уже проверенные bytes как multipart Blob.
+- автоматически создавать безопасную уменьшенную PNG-копию только для Telegram, сохраняя исходное изображение без изменений;
 
 ## Основные проекты
 
@@ -53,7 +54,7 @@
 10. Каждый успешный результат немедленно записывается и отправляется в GitHub через `data/published.json`.
 11. После завершения запуска обновляются `data/health.json` и `data/errors.json`; при фатальном сбое state коммитится до возврата ошибки.
 
-Приватные репозитории не сканируются. Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md). Точный контракт изображений: [docs/IMAGE_INTEGRITY.md](docs/IMAGE_INTEGRITY.md).
+Приватные репозитории не сканируются. Полная схема: [docs/QUEUE_ARCHITECTURE.md](docs/QUEUE_ARCHITECTURE.md). Точный контракт изображений: [docs/IMAGE_INTEGRITY.md](docs/IMAGE_INTEGRITY.md). Нормализация длинных PNG: [docs/TELEGRAM_PHOTO_NORMALIZATION.md](docs/TELEGRAM_PHOTO_NORMALIZATION.md).
 
 ## Пример структуры патчноута
 
