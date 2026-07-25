@@ -11,6 +11,7 @@ import {
 } from "./patchnote-policy.js";
 import { parsePatchnote } from "./lib/front-matter.js";
 import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";
+import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
 function printUsage() {
@@ -119,6 +120,17 @@ function imageSummary(images) {
   }));
 }
 
+function prepareTelegramImages(validatedImages) {
+  return validatedImages.map(({ name, filePath, validated }) => ({
+    name,
+    filePath,
+    validated: normalizeTelegramPhoto(validated, {
+      fileName: name,
+      label: `${name} (${filePath})`,
+    }),
+  }));
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (args.help || !args.filePath) {
@@ -135,14 +147,19 @@ async function main() {
   const policy = assertPublicationPolicy({ frontMatter, body, label: markdownPath });
   const imagePaths = resolveImagePaths(markdownPath, policy.imageNames);
   const validatedImages = await loadValidatedLocalImages(imagePaths, policy.imageNames);
+  const telegramImages = prepareTelegramImages(validatedImages);
 
-  const method = validatedImages.length > 1 ? "sendMediaGroup" : validatedImages.length === 1 ? "sendPhoto" : "sendMessage";
+  const method = telegramImages.length > 1 ? "sendMediaGroup" : telegramImages.length === 1 ? "sendPhoto" : "sendMessage";
 
   const summary = {
     method,
     patchnote: markdownPath,
     images: policy.imageNames,
-    imageIntegrity: imageSummary(validatedImages),
+    sourceImageIntegrity: imageSummary(validatedImages),
+    telegramImageDelivery: telegramImages.map(({ name, validated }) => ({
+      name,
+      ...telegramPhotoSummary(validated),
+    })),
     captionLength: policy.captionText.length,
     captionWasTruncated: policy.captionWasTruncated,
     messageLength: policy.messageText.length,
@@ -163,7 +180,7 @@ async function main() {
     throw new Error("TELEGRAM_BOT_TOKEN and TELEGRAM_CHANNEL_ID are required unless --dry-run is used.");
   }
 
-  const mediaItems = validatedImages.map(({ name, validated }) => ({
+  const mediaItems = telegramImages.map(({ name, validated }) => ({
     name,
     loadBlob: () => validatedImageBlob(validated),
   }));
