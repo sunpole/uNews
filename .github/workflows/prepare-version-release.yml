@@ -171,12 +171,15 @@ jobs:
             exit 0
           fi
 
-          remote_sha="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
-          if [ "$remote_sha" = "$local_sha" ]; then
-            echo "Generated release commit is already the remote branch head."
-            exit 0
-          fi
+          echo "Initial push returned a failure; checking the remote head with retries."
+          for attempt in 1 2 3 4 5 6; do
+            remote_sha="$(git ls-remote origin "refs/heads/${TARGET_BRANCH}" | cut -f1)"
+            if [ "$remote_sha" = "$local_sha" ]; then
+              echo "Generated release commit is the remote branch head (attempt ${attempt})."
+              exit 0
+            fi
+            echo "Attempt ${attempt}: remote=${remote_sha:-missing}, expected=${local_sha}"
+            sleep 2
+          done
 
-          echo "Generated commit: ${local_sha}"
-          echo "Remote branch head: ${remote_sha:-missing}"
           exit 1
