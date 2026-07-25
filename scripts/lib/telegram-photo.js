@@ -60,7 +60,7 @@ export function telegramPhotoIsSafe(validated, limits = TELEGRAM_PHOTO_LIMITS) {
 }
 
 function parsePng(buffer, label) {
-  if (!Buffer.isBuffer(buffer) || !buffer.subarray(0, 8).equals(PNG_SIGNATURE)) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 20 || !buffer.subarray(0, 8).equals(PNG_SIGNATURE)) {
     fail(label, "expected validated PNG bytes");
   }
 
@@ -73,6 +73,7 @@ function parsePng(buffer, label) {
   const idat = [];
 
   while (offset < buffer.length) {
+    if (offset + 12 > buffer.length) fail(label, "truncated PNG while preparing Telegram photo");
     const length = buffer.readUInt32BE(offset);
     const type = buffer.subarray(offset + 4, offset + 8).toString("ascii");
     const dataStart = offset + 8;
@@ -171,13 +172,26 @@ function resizeNearestNeighbor(source, {
   bytesPerPixel,
 }) {
   const output = Buffer.allocUnsafe(targetWidth * targetHeight * bytesPerPixel);
+  const sourceXOffsets = new Uint32Array(targetWidth);
+  for (let targetX = 0; targetX < targetWidth; targetX += 1) {
+    sourceXOffsets[targetX] = Math.min(
+      sourceWidth - 1,
+      Math.floor(targetX * sourceWidth / targetWidth),
+    ) * bytesPerPixel;
+  }
+
   for (let targetY = 0; targetY < targetHeight; targetY += 1) {
     const sourceY = Math.min(sourceHeight - 1, Math.floor(targetY * sourceHeight / targetHeight));
+    const sourceRowOffset = sourceY * sourceWidth * bytesPerPixel;
+    const targetRowOffset = targetY * targetWidth * bytesPerPixel;
+
     for (let targetX = 0; targetX < targetWidth; targetX += 1) {
-      const sourceX = Math.min(sourceWidth - 1, Math.floor(targetX * sourceWidth / targetWidth));
-      const sourceOffset = (sourceY * sourceWidth + sourceX) * bytesPerPixel;
-      const targetOffset = (targetY * targetWidth + targetX) * bytesPerPixel;
-      source.copy(output, targetOffset, sourceOffset, sourceOffset + bytesPerPixel);
+      const sourceOffset = sourceRowOffset + sourceXOffsets[targetX];
+      const targetOffset = targetRowOffset + targetX * bytesPerPixel;
+      output[targetOffset] = source[sourceOffset];
+      output[targetOffset + 1] = source[sourceOffset + 1];
+      output[targetOffset + 2] = source[sourceOffset + 2];
+      if (bytesPerPixel === 4) output[targetOffset + 3] = source[sourceOffset + 3];
     }
   }
   return output;
@@ -279,7 +293,7 @@ export function normalizeTelegramPhoto(validated, {
     const candidate = validateImageBytes(output, {
       fileName,
       label: `${label} normalized Telegram copy`,
-      maxBytes: limits.maxBytes,
+      maxBytes: Math.max(limits.maxBytes, output.length),
     });
 
     if (telegramPhotoIsSafe(candidate, limits)) {
