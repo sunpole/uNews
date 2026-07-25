@@ -22,6 +22,7 @@ import {
 import { createGitHubClient } from "./lib/github-client.js";
 import { checkpointPublishedState } from "./lib/git-checkpoint.js";
 import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";
+import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
 
 const MAX_POSTS_PER_RUN = Math.max(1, Math.min(20, Number(process.env.UNEWS_MAX_POSTS_PER_RUN || 20)));
@@ -111,6 +112,24 @@ function imageIntegritySummary(images) {
   }));
 }
 
+function prepareTelegramImages(patchnote, validatedImages) {
+  return validatedImages.map(({ name, url, validated }) => ({
+    name,
+    url,
+    validated: normalizeTelegramPhoto(validated, {
+      fileName: name,
+      label: `${patchnote.key} image ${name}`,
+    }),
+  }));
+}
+
+function telegramDeliverySummary(images) {
+  return images.map(({ name, validated }) => ({
+    name,
+    ...telegramPhotoSummary(validated),
+  }));
+}
+
 async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
   const policy = assertPublicationPolicy({
     frontMatter: patchnote.frontMatter,
@@ -120,9 +139,10 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
 
   // Re-fetch immediately before Telegram. This prevents a file from changing
   // between the queue audit and the actual send, and ensures Telegram receives
-  // the exact bytes that uNews validated.
+  // a validated source plus a deterministic in-memory safe copy when needed.
   const validatedImages = await loadValidatedRemoteImages(patchnote, policy.imageNames);
-  const mediaItems = validatedImages.map(({ name, validated }) => ({
+  const telegramImages = prepareTelegramImages(patchnote, validatedImages);
+  const mediaItems = telegramImages.map(({ name, validated }) => ({
     name,
     loadBlob: () => validatedImageBlob(validated),
   }));
@@ -134,7 +154,8 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
       {
         method,
         images: policy.imageNames,
-        imageIntegrity: imageIntegritySummary(validatedImages),
+        sourceImageIntegrity: imageIntegritySummary(validatedImages),
+        telegramImageDelivery: telegramDeliverySummary(telegramImages),
         captionLength: policy.captionText.length,
         captionWasTruncated: policy.captionWasTruncated,
         link: policy.link,
