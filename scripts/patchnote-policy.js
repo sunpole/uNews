@@ -1,9 +1,9 @@
 export const TELEGRAM_CAPTION_LIMIT = 1024;
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
 
-const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "documentation", "feature", "bugfix", "release"]);
-const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "docs", "documentation", "ui", "feature", "warning", "idea", "roadmap", "report", "note"]);
-const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление)/i;
+const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "documentation", "feature", "bugfix", "release", "audit"]);
+const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "docs", "documentation", "audit", "ui", "feature", "warning", "idea", "roadmap", "report", "note"]);
+const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление|аудит|отч[её]т)/i;
 const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i;
 const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
 const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р•|Р–|Р—|Р™|Рљ|Рњ|Рђ|СЃ|С‚|СЊ|С‹|СЋ|СЏ|СЂ|С‡|С€|С‰)/u;
@@ -23,6 +23,7 @@ const TYPE_PREFIX = new Map([
   ["feature", "Обновление."],
   ["bugfix", "Патч исправления."],
   ["release", "Релиз."],
+  ["audit", "Аудит."],
 ]);
 
 export function getImageNames(frontMatter) {

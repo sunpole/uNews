@@ -1,19 +1,20 @@
 {
   "schemaVersion": 1,
   "project": "uNews",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "releaseDate": "2026-07-26",
-  "status": "queue-policy-hardening",
+  "status": "queue-policy-audit-type",
   "productionReady": true,
   "summary": {
-    "ru": "uNews больше не принимает служебные Markdown-файлы из news/ за патчноуты и поддерживает type: documentation как документационное обновление.",
-    "en": "uNews no longer treats support Markdown files in news/ as patchnotes and accepts type: documentation as a documentation update."
+    "ru": "uNews поддерживает type: audit как безопасный тип отчёта, чтобы аудит-патчноуты не застревали в очереди публикации.",
+    "en": "uNews accepts type: audit as a safe report type so audit patchnotes do not remain blocked in the publishing queue."
   },
   "verified": {
     "sourcePreserved": true,
     "newsReadmeIgnored": true,
     "datedMarkdownRequired": true,
     "documentationTypeAllowed": true,
+    "auditTypeAllowed": true,
     "maxPhotoBytes": 10485760,
     "maxDimensionSum": 10000,
     "safeDimensionSum": 9800,
@@ -31,7 +32,7 @@
     "publishedTagsAreImmutable": true
   },
   "nextTarget": {
-    "version": "0.3.10",
+    "version": "0.3.11",
     "ru": "Добавить более явное разделение bot_failed / queue_has_errors / nothing_ready в health.json.",
     "en": "Add clearer bot_failed / queue_has_errors / nothing_ready distinction in health.json."
   }

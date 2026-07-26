@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.10 — 2026-07-26
+
+### Fixed
+
+- `type: audit` is now accepted as a safe queue publication type.
+- uDream audit reports can pass publication policy instead of remaining blocked with `Unsupported type: audit`.
+
+### Changed
+
+- Audit posts receive a compact `Аудит.` prefix when their Telegram text does not already contain audit/report wording.
+
 ## 0.3.9 — 2026-07-26
 
 ### Fixed
