@@ -68,6 +68,11 @@ requireIncludes(
   "publish-all-news workflow",
 );
 
+const githubClient = await readFile(path.resolve("scripts/lib/github-client.js"), "utf8");
+requireIncludes(githubClient, "isPublishableNewsMarkdown", "GitHub client queue scanner");
+requireIncludes(githubClient, "NEWS_PATCHNOTE_FILE_RE", "GitHub client queue scanner");
+requireIncludes(githubClient, ".filter(isPublishableNewsMarkdown)", "GitHub client queue scanner");
+
 const batchPublisher = await readFile(path.resolve("scripts/publish-all-news.js"), "utf8");
 requireIncludes(
   batchPublisher,
@@ -173,5 +178,5 @@ requireSourceOrder(
 
 console.log(
   `OK syntax: ${files.length} JavaScript files; `
-  + "publisher identity, GET image audit, deep validation, Telegram-safe normalization and Blob upload are guarded",
+  + "publisher identity, queue markdown filter, GET image audit, deep validation, Telegram-safe normalization and Blob upload are guarded",
 );

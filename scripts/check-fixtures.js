@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { buildPublicationPolicy } from "./patchnote-policy.js";
+import { isPublishableNewsMarkdown } from "./lib/github-client.js";
 
 const validUsugarFrontMatter = {
   type: "docs",
@@ -13,6 +14,37 @@ const validUsugarFrontMatter = {
   image: "safe.png",
   image_text: "uSugar карта задач документационное обновление без приватных данных",
 };
+
+const newsScannerFixtures = [
+  {
+    name: "dated patchnote markdown is publishable",
+    entry: { type: "file", name: "2026-07-26-unews-v0-3-9-queue-policy.md" },
+    expected: true,
+  },
+  {
+    name: "news README is documentation, not a patchnote",
+    entry: { type: "file", name: "README.md" },
+    expected: false,
+  },
+  {
+    name: "undated markdown note is not a queued patchnote",
+    entry: { type: "file", name: "draft-policy.md" },
+    expected: false,
+  },
+  {
+    name: "image asset is not a markdown patchnote",
+    entry: { type: "file", name: "2026-07-26-unews-v0-3-9-queue-policy.png" },
+    expected: false,
+  },
+];
+
+for (const fixture of newsScannerFixtures) {
+  const actual = isPublishableNewsMarkdown(fixture.entry);
+  if (actual !== fixture.expected) {
+    throw new Error(`news scanner fixture failed: ${fixture.name}; expected ${fixture.expected}, got ${actual}`);
+  }
+  console.log(`OK ${fixture.name}`);
+}
 
 const fixtures = [
   {
@@ -28,6 +60,29 @@ const fixtures = [
     frontMatter: { ...validUsugarFrontMatter, type: "unknown-type" },
     body: "Короткий текст для Telegram:\nДокументационное обновление uSugar с русским текстом.",
     expected: "Unsupported type",
+  },
+  {
+    name: "documentation type alias",
+    shouldPass: true,
+    frontMatter: {
+      type: "documentation",
+      project: "uDream",
+      series: "udream",
+      title: "Data provenance",
+      version: "23.8.8",
+      queued_at: "2026-07-22T09:40:00Z",
+      repo_url: "https://github.com/sunpole/udream",
+      image: "safe.png",
+    },
+    body: "Короткий текст для Telegram:\nПроверена история данных и аккуратно описано происхождение источников.",
+    assert(policy) {
+      if (!policy.captionText.includes("Документационное обновление.")) {
+        throw new Error("documentation alias did not receive docs wording");
+      }
+      if (!policy.captionText.includes("#uDream #тыСон #uNews #Sunpole")) {
+        throw new Error("documentation alias has no uDream hashtags");
+      }
+    },
   },
   {
     name: "missing queued_at",

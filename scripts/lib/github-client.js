@@ -1,4 +1,11 @@
 const DEFAULT_API = "https://api.github.com";
+const NEWS_PATCHNOTE_FILE_RE = /^\d{4}-\d{2}-\d{2}-.+\.md$/i;
+
+export function isPublishableNewsMarkdown(entry) {
+  return entry?.type === "file"
+    && NEWS_PATCHNOTE_FILE_RE.test(String(entry.name || ""))
+    && String(entry.name || "").toLowerCase() !== "readme.md";
+}
 
 export function createGitHubClient({ token = "", apiBase = DEFAULT_API } = {}) {
   const headers = {
@@ -63,7 +70,7 @@ export function createGitHubClient({ token = "", apiBase = DEFAULT_API } = {}) {
     const entries = await getJson(url);
     if (!Array.isArray(entries)) return [];
     return entries
-      .filter((entry) => entry.type === "file" && entry.name.endsWith(".md"))
+      .filter(isPublishableNewsMarkdown)
       .map((entry) => ({
         project,
         name: entry.name,

@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.9 — 2026-07-26
+
+### Fixed
+
+- `news/README.md` and other undated Markdown support files are no longer treated as queued patchnotes.
+- `type: documentation` is now accepted as an alias for a documentation update.
+- Queue fixtures now prove that only dated `YYYY-MM-DD-*.md` files enter the publishing queue.
+
+### Changed
+
+- The queue scanner now has an explicit `isPublishableNewsMarkdown` predicate.
+- Documentation update wording is applied to both `docs` and `documentation` types.
+
 ## 0.3.8 — 2026-07-25
 
 ### Added
