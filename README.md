@@ -6,7 +6,7 @@
 
 **uNews** — единая система публикации новостей, патчноутов и отчётов разработки по проектам Антона.
 
-Текущая версия: **0.3.8**. Она проверяет реальные bytes и внутреннюю структуру каждого изображения до Telegram. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
+Текущая версия: **0.3.9**. Она не принимает служебные Markdown-файлы из `news/` за патчноуты и поддерживает `type: documentation` как документационное обновление. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
 
 Главная идея: каждый проект хранит свои новости в папке `news/`, а uNews забирает эти патчноуты и публикует их в Telegram-канал через бота.
 
@@ -29,6 +29,7 @@
 - повторно проверять файл непосредственно перед Telegram;
 - передавать Telegram уже проверенные bytes как multipart Blob.
 - автоматически создавать безопасную уменьшенную PNG-копию только для Telegram, сохраняя исходное изображение без изменений;
+- игнорировать служебные Markdown-файлы в `news/`, если имя не похоже на датированный патчноут `YYYY-MM-DD-*.md`.
 
 ## Основные проекты
 
@@ -84,7 +85,7 @@ images:
 
 ### Поля
 
-- `type` — тип публикации: `intro`, `patch`, `report`, `note`.
+- `type` — тип публикации: `intro`, `patch`, `report`, `note`, `docs`, `documentation`, `feature`, `bugfix`, `release`.
 - `project` — название проекта.
 - `series` — короткий ключ серии, например `500td`, `usugar`, `udream`.
 - `title` — заголовок публикации.
@@ -168,7 +169,7 @@ npm test
 
 Если для проекта нет mapping, check падает и mapping нужно добавить до публикации.
 
-Для `type: patch`, `docs`, `feature`, `bugfix` и `release` финальная подпись обязательно содержит слово “патч”, “обновление”, “релиз” или “документационное обновление”. Если автор забыл это в коротком тексте, policy добавляет компактную вводную фразу автоматически.
+Для `type: patch`, `docs`, `documentation`, `feature`, `bugfix` и `release` финальная подпись обязательно содержит слово “патч”, “обновление”, “релиз” или “документационное обновление”. Если автор забыл это в коротком тексте, policy добавляет компактную вводную фразу автоматически.
 
 Публикация блокируется, если в патчноуте есть подозрение на секреты, `.env`, token-like строки, `TELEGRAM_BOT_TOKEN`, `DEEPSEEK_API_KEY`. Для `uSugar` дополнительно блокируются приватные Telegram identifiers, ngrok-ссылки и явные glucose-like медицинские значения.
 
@@ -198,106 +199,3 @@ BOT_USERNAME=@uNewsDev_bot
 - `TELEGRAM_CHANNEL_ID`
 
 Значения секретов нельзя публиковать в README, логах, issue, pull request или патчноутах.
-
-## Telegram
-
-- Канал: [@uNewsLog](https://t.me/uNewsLog)
-- Бот: `@uNewsDev_bot`
-
-## GitHub Actions
-
-Главный workflow публикации — `.github/workflows/publish-all-news.yml`.
-
-- `workflow_dispatch` с `dry_run=true` запускает `npm run publish:all:check`;
-- `workflow_dispatch` с `dry_run=false`, trigger-файл и расписание запускают реальную очередь;
-- тесты исходников и очереди выполняются перед каждым запуском, включая расписание;
-- preflight безопасно проверяет Telegram bot token через `getMe` и доступ к каналу через `getChat`;
-- queue audit скачивает все pending-изображения через GET и проверяет реальные bytes;
-- непосредственно перед постом файл проверяется повторно и отправляется как проверенный Blob;
-- до `publish:all` workflow настраивает Git identity `github-actions[bot]`, необходимую для каждого per-post checkpoint;
-- `publish:all` выполняется через `scripts/run-publish-all-news.js`;
-- после каждой успешной реальной публикации `data/published.json` немедленно коммитится;
-- при фатальном сбое runner записывает безопасную причину в `data/health.json` и `data/errors.json`;
-- workflow коммитит изменённый `data/` до шага, который окончательно возвращает ошибку;
-- ошибка одного проекта записывается в `data/errors.json` и не останавливает остальные проекты;
-- служебный Issue создаётся один раз при ошибке и автоматически закрывается после успешного восстановления;
-- `data/published.json` хранит `message_ids`, `post_url`, `method`, `queued_at` и `published_at` для новых публикаций.
-
-Workflow `Diagnose public project news` проверяет ту же очередь всех публичных проектов без публикации. Отдельный `Quality checks` запускает синтаксические и поведенческие тесты при изменениях кода.
-
-## Состояние очереди
-
-`data/health.json` хранит:
-
-- время последней успешной проверки;
-- время и статус последней попытки;
-- число ожидающих и заблокированных записей;
-- следующий ключ очереди;
-- безопасную последнюю ошибку без секретов.
-
-`data/errors.json` хранит структурированный список ошибок текущей попытки. При успешном запуске список очищается.
-
-## Модульная структура
-
-- `scripts/lib/github-client.js` — только обнаружение публичных репозиториев и чтение GitHub;
-- `scripts/lib/image-integrity.js` — GET, сигнатуры, размеры, PNG CRC и декодирование;
-- `scripts/lib/telegram-client.js` — только безопасная отправка в Telegram;
-- `scripts/lib/front-matter.js` — единый разбор патчноутов;
-- `scripts/lib/queue.js` — порядок версий, FIFO и пауза;
-- `scripts/lib/state.js` — строгая проверка, атомарная запись и успешный health-state;
-- `scripts/lib/run-state.js` — безопасная фиксация фатального состояния;
-- `scripts/patchnote-policy.js` — правила содержимого и безопасности;
-- `scripts/publish-all-news.js` — координация одного запуска;
-- `scripts/run-publish-all-news.js` — защитный runner с сохранением fatal-state;
-- `scripts/record-run-failure.js` — запись ошибки workflow preflight.
-
-Пост `https://t.me/uNewsLog/8` был опубликован до обязательного footer-rule, а затем исправлен maintenance-командой `editMessageCaption`: подпись обновлена ссылкой и хештегами без создания дубля.
-
-## Статус
-
-uNews работает как GitHub-first очередь для публичных проектов. Версия `0.3.7` проверяет реальные bytes каждого изображения до FIFO и повторно перед Telegram; версия `0.3.6` сохраняет Git identity до publisher-step, а recovery-state `0.3.5`, FIFO, безопасность и пауза остаются действующими.
-
-Проверено на практике:
-
-- бот публикует текст, одну картинку и Telegram-альбом;
-- патчноут `500TD v1.0.2` опубликован с двумя изображениями;
-- полный dry-run `0.3.7` проверил 35 публичных проектов: 9 pending, 9 ready, 0 errors;
-- dry-run подтвердил пять исправленных uDream-изображений и отсутствие повторной публикации message `54`;
-- Telegram preflight подтверждает `@uNewsDev_bot` и канал `@uNewsLog`;
-- после каждого успешного поста состояние фиксируется в GitHub;
-- при ошибке state сохраняется до завершения workflow.
-
-## Безопасность
-
-Правила работы с credentials находятся в [SECURITY.md](SECURITY.md), последний аудит — в [docs/SECURITY_AUDIT_2026-07-18.md](docs/SECURITY_AUDIT_2026-07-18.md).
-
-## Лицензия
-
-MIT
-
-## Russian Publication Policy
-
-Новости проектов Антона по умолчанию публикуются на русском языке. Английские технические слова допустимы как короткие термины (`OCR`, `WebApp`, `runtime`, `Settings`, `Food Log`), но основной текст Telegram-поста должен быть понятным русским описанием обновления.
-
-Для `project: uSugar` policy дополнительно требует:
-
-- поле `version`;
-- поле `image_text` с машинно-проверяемым описанием видимого текста карточки;
-- русский caption/body;
-- отсутствие `????`, `???`, `�` и типичных mojibake-фрагментов;
-- footer `#uSugar #тыСахар #uNews #Sunpole`;
-- ссылку через `web_url` или `repo_url`;
-- отсутствие приватных Telegram identifiers, медицинских значений, `.env`, токенов и ngrok-ссылок.
-
-Карточка Telegram для uSugar должна быть на русском или почти без текста. Английская карточка для русского uSugar-поста считается ошибкой.
-
-## Repairing Existing Telegram Posts
-
-Старые опубликованные посты нельзя чинить повторной публикацией: это создаёт дубли. Если у поста известен `message_id` в `data/published.json`, используйте maintenance-команды:
-
-```bash
-npm run edit:media -- -- --message-id 14 --patchnote "../002_usugar/news/example.md" --key "published-key" --record-state
-npm run edit:caption -- -- --message-id 14 --patchnote "../002_usugar/news/example.md" --key "published-key" --record-state
-```
-
-`edit:media` заменяет картинку и caption через Telegram `editMessageMedia`. Если Telegram отказывает в замене изображения, используйте `edit:caption` и честно зафиксируйте, что старая картинка осталась исторической.
