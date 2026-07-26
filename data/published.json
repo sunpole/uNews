@@ -9,6 +9,7 @@
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-5-0-alpha-separate-scheme-and-report-pdfs.md",
     "sunpole/uImposition|main|news/2026-07-25-uimposition-v0-6-0-alpha-proven-paper-minimum.md",
     "sunpole/uImposition|main|news/2026-07-26-uimposition-v0-7-0-alpha-1-paper-cost-and-form-priorities.md",
+    "sunpole/uImposition|main|news/2026-07-26-uimposition-v0-7-0-alpha-2-pricing-ready.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-2-health-contract.md",
@@ -657,6 +658,15 @@
       "post_url": "https://t.me/uNewsLog/75",
       "queued_at": "2026-07-23T07:10:00.000Z",
       "published_at": "2026-07-26T13:47:37.062Z"
+    },
+    "sunpole/uImposition|main|news/2026-07-26-uimposition-v0-7-0-alpha-2-pricing-ready.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        76
+      ],
+      "post_url": "https://t.me/uNewsLog/76",
+      "queued_at": "2026-07-26T17:05:00.000Z",
+      "published_at": "2026-07-26T21:06:25.428Z"
     }
   }
 }
