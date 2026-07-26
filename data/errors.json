@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-26T10:10:56.646Z",
+  "updated_at": "2026-07-26T13:47:38.350Z",
   "errors": [
     {
       "project": "sunpole/udream",
-      "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-10-data-quality-audit.md",
-      "version": "23.8.10",
+      "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
+      "version": "23.8.11",
       "errors": [
-        "Patchnote policy failed for sunpole/udream|main|news/2026-07-23-udream-v23-8-10-data-quality-audit.md:\n- Unsupported type: audit"
+        "Patchnote policy failed for sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md:\n- Unsupported type: architecture"
       ]
     }
   ]
