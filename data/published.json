@@ -67,6 +67,7 @@
     "sunpole/udream|main|news/2026-07-22-udream-v23-8-6-unified-ai-workflow.md",
     "sunpole/udream|main|news/2026-07-22-udream-v23-8-7-playwright-screenshots.md",
     "sunpole/udream|main|news/2026-07-22-udream-v23-8-8-data-provenance.md",
+    "sunpole/udream|main|news/2026-07-23-udream-v23-8-10-data-quality-audit.md",
     "sunpole/udream|main|news/2026-07-23-udream-v23-8-9-dataset-registry.md"
   ],
   "details": {
@@ -647,6 +648,15 @@
       "post_url": "https://t.me/uNewsLog/74",
       "queued_at": "2026-07-26T08:36:38.000Z",
       "published_at": "2026-07-26T10:10:55.528Z"
+    },
+    "sunpole/udream|main|news/2026-07-23-udream-v23-8-10-data-quality-audit.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        75
+      ],
+      "post_url": "https://t.me/uNewsLog/75",
+      "queued_at": "2026-07-23T07:10:00.000Z",
+      "published_at": "2026-07-26T13:47:37.062Z"
     }
   }
 }
