@@ -1,8 +1,8 @@
 export const TELEGRAM_CAPTION_LIMIT = 1024;
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
 
-const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "feature", "bugfix", "release"]);
-const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "docs", "ui", "feature", "warning", "idea", "roadmap", "report", "note"]);
+const REQUIRED_WORD_TYPES = new Set(["patch", "docs", "documentation", "feature", "bugfix", "release"]);
+const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "docs", "documentation", "ui", "feature", "warning", "idea", "roadmap", "report", "note"]);
 const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление)/i;
 const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i;
 const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
@@ -19,6 +19,7 @@ const HASHTAG_MAPPING = new Map([
 const TYPE_PREFIX = new Map([
   ["patch", "Патч."],
   ["docs", "Документационное обновление."],
+  ["documentation", "Документационное обновление."],
   ["feature", "Обновление."],
   ["bugfix", "Патч исправления."],
   ["release", "Релиз."],
