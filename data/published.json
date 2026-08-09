@@ -15,6 +15,7 @@
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-31-save-new-version.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-32-demo-database.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-33-demo-workspace.md",
+    "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-34-people-trash.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-1-0-alpha-first-working-version.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-2-0-alpha-capacity-and-page-pairs.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-3-0-alpha-front-and-mirrored-back.md",
@@ -827,6 +828,15 @@
       "post_url": "https://t.me/uNewsLog/92",
       "queued_at": "2026-08-09T16:15:00.000Z",
       "published_at": "2026-08-09T12:54:34.687Z"
+    },
+    "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-34-people-trash.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        93
+      ],
+      "post_url": "https://t.me/uNewsLog/93",
+      "queued_at": "2026-08-09T17:00:00.000Z",
+      "published_at": "2026-08-09T21:35:48.915Z"
     }
   }
 }
