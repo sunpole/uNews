@@ -1,21 +1,21 @@
 {
   "schema": 1,
-  "updated_at": "2026-08-09T21:35:50.239Z",
+  "updated_at": "2026-08-09T21:38:19.371Z",
   "errors": [
+    {
+      "project": "sunpole/uChurch",
+      "key": "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-35-demo-workspace.md",
+      "version": "17.11.35",
+      "errors": [
+        "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-35-demo-workspace.md image 2026-08-09-uchurch-v17-11-35-demo-workspace.png: extension declares png, bytes are jpeg"
+      ]
+    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
       "version": "23.8.11",
       "errors": [
         "Patchnote policy failed for sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md:\n- Unsupported type: architecture"
-      ]
-    },
-    {
-      "project": "sunpole/uChurch",
-      "key": "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-35-demo-workspace.md",
-      "version": "17.11.35",
-      "errors": [
-        "Patchnote policy failed for sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-35-demo-workspace.md:\n- Unsupported type: fix"
       ]
     }
   ]
