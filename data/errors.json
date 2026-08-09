@@ -1,7 +1,15 @@
 {
   "schema": 1,
-  "updated_at": "2026-07-26T13:47:38.350Z",
+  "updated_at": "2026-08-09T16:46:09.529Z",
   "errors": [
+    {
+      "project": "sunpole/uChurch",
+      "key": "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-34-people-trash.md",
+      "version": "17.11.34",
+      "errors": [
+        "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-34-people-trash.md image 2026-08-09-uchurch-v17-11-34-people-trash.png: extension declares png, bytes are jpeg"
+      ]
+    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
