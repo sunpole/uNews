@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "last_successful_check_at": "2026-08-09T20:43:47.148Z",
-  "last_attempt_at": "2026-08-09T20:43:47.148Z",
+  "last_successful_check_at": "2026-08-09T21:33:08.177Z",
+  "last_attempt_at": "2026-08-09T21:33:08.177Z",
   "last_attempt_status": "success",
-  "pending_count": 9,
+  "pending_count": 10,
   "ready_project_count": 0,
   "error_count": 2,
   "selected_key": null,
