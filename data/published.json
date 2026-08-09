@@ -10,6 +10,7 @@
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-26-external-user-data.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-27-explicit-backup-source.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-28-data-session-foundation.md",
+    "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-29-unconnected-shell.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-1-0-alpha-first-working-version.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-2-0-alpha-capacity-and-page-pairs.md",
     "sunpole/uImposition|main|news/2026-07-24-uimposition-v0-3-0-alpha-front-and-mirrored-back.md",
@@ -777,6 +778,15 @@
       "post_url": "https://t.me/uNewsLog/87",
       "queued_at": "2026-08-09T08:15:00.000Z",
       "published_at": "2026-08-09T08:14:39.726Z"
+    },
+    "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-29-unconnected-shell.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        88
+      ],
+      "post_url": "https://t.me/uNewsLog/88",
+      "queued_at": "2026-08-09T09:25:30.000Z",
+      "published_at": "2026-08-09T09:27:02.499Z"
     }
   }
 }
