@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.13 — 2026-08-11
+
+### Fixed
+
+- Labelled terminal hashtag lines such as `Хэштеги: ...` are rejected before publication.
+- Legacy repair waits for Telegram rate limits, skips already repaired messages and retries a transient network failure.
+
+### Verified
+
+- The read-only audit reports 95 clean published captions: no duplicate footer, likely English caption or unresolved source remains.
+
 ## 0.3.12 — 2026-08-11
 
 ### Added
