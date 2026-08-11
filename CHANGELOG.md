@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.11 — 2026-08-11
+
+### Fixed
+
+- Policy blocks a manually written URL or a multi-tag footer in a patchnote body.
+- The Telegram publisher remains the sole owner of the one-link, one-tag-set footer.
+
+### Verified
+
+- Fixtures prove that a manual Russian `Ссылка:` line and a manual hashtag footer fail before publication.
+
 ## 0.3.10 — 2026-07-26
 
 ### Fixed

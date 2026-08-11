@@ -275,6 +275,38 @@ const fixtures = [
     expected: "Secret-like text detected",
   },
   {
+    name: "manual Telegram link is rejected",
+    shouldPass: false,
+    frontMatter: {
+      type: "patch",
+      project: "uNews",
+      series: "unews",
+      title: "Duplicate link",
+      version: "0.3.11",
+      queued_at: "2026-08-11T12:00:00Z",
+      repo_url: "https://github.com/sunpole/uNews",
+      image: "safe.png",
+    },
+    body: "Patch text.\n\n\u0421\u0441\u044b\u043b\u043a\u0430: https://sunpole.github.io/uNews/",
+    expected: "Manual URL detected",
+  },
+  {
+    name: "manual Telegram hashtags are rejected",
+    shouldPass: false,
+    frontMatter: {
+      type: "patch",
+      project: "uNews",
+      series: "unews",
+      title: "Duplicate hashtags",
+      version: "0.3.11",
+      queued_at: "2026-08-11T12:00:00Z",
+      repo_url: "https://github.com/sunpole/uNews",
+      image: "safe.png",
+    },
+    body: "Patch text.\n\n#uNews #\u0442\u044b\u041d\u043e\u0432\u043e\u0441\u0442\u0438 #Sunpole",
+    expected: "Manual hashtag footer detected",
+  },
+  {
     name: "GitHub credential-like text",
     shouldPass: false,
     frontMatter: {

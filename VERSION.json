@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
   "project": "uNews",
-  "version": "0.3.10",
-  "releaseDate": "2026-07-26",
-  "status": "queue-policy-audit-type",
+  "version": "0.3.11",
+  "releaseDate": "2026-08-11",
+  "status": "single-footer-policy",
   "productionReady": true,
   "summary": {
-    "ru": "uNews поддерживает type: audit как безопасный тип отчёта, чтобы аудит-патчноуты не застревали в очереди публикации.",
-    "en": "uNews accepts type: audit as a safe report type so audit patchnotes do not remain blocked in the publishing queue."
+    "ru": "uNews блокирует ручные ссылку и набор меток в тексте патчноута, потому что финальный footer добавляется policy-слоем ровно один раз.",
+    "en": "uNews blocks manual links and hashtag sets in patchnote text because the policy layer adds the final footer exactly once."
   },
   "verified": {
     "sourcePreserved": true,
@@ -15,6 +15,7 @@
     "datedMarkdownRequired": true,
     "documentationTypeAllowed": true,
     "auditTypeAllowed": true,
+    "manualTelegramFooterBlocked": true,
     "maxPhotoBytes": 10485760,
     "maxDimensionSum": 10000,
     "safeDimensionSum": 9800,
@@ -32,7 +33,7 @@
     "publishedTagsAreImmutable": true
   },
   "nextTarget": {
-    "version": "0.3.11",
+    "version": "0.3.12",
     "ru": "Добавить более явное разделение bot_failed / queue_has_errors / nothing_ready в health.json.",
     "en": "Add clearer bot_failed / queue_has_errors / nothing_ready distinction in health.json."
   }

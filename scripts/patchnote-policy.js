@@ -154,6 +154,9 @@ function validatePatchnote({ frontMatter, body }) {
   const brokenTextRisk = findBrokenTextRisk(textForSafety);
   if (brokenTextRisk) errors.push(brokenTextRisk);
 
+  const manualFooterRisk = findManualTelegramFooter(body);
+  if (manualFooterRisk) errors.push(manualFooterRisk);
+
   if (frontMatter.project === "uSugar") {
     const usugarRisk = findUsugarRisk(textForSafety);
     if (usugarRisk) errors.push(usugarRisk);
@@ -256,6 +259,19 @@ function findBrokenTextRisk(text) {
   if (BROKEN_TEXT_RE.test(text)) {
     return "Broken/mojibake text detected.";
   }
+  return null;
+}
+
+function findManualTelegramFooter(text) {
+  const source = String(text || "");
+  if (/https?:\/\/[^\s]+/iu.test(source)) {
+    return "Manual URL detected: the policy layer adds the single Telegram link.";
+  }
+
+  if (/(?:^|\r?\n)\s*(?:#[\p{L}\p{N}_-]+\s*){2,}$/u.test(source)) {
+    return "Manual hashtag footer detected: the policy layer adds the single Telegram hashtag set.";
+  }
+
   return null;
 }
 

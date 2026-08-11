@@ -15,8 +15,9 @@ async function listJavaScriptFiles(directory) {
 }
 
 function requireSourceOrder(source, earlier, later, label) {
-  const earlierIndex = source.indexOf(earlier);
-  const laterIndex = source.indexOf(later);
+  const normalizedSource = source.replace(/\r\n/g, "\n");
+  const earlierIndex = normalizedSource.indexOf(earlier);
+  const laterIndex = normalizedSource.indexOf(later);
   if (earlierIndex < 0) throw new Error(`${label}: missing ${earlier}`);
   if (laterIndex < 0) throw new Error(`${label}: missing ${later}`);
   if (earlierIndex >= laterIndex) {
