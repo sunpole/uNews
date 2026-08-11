@@ -729,7 +729,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/80",
       "queued_at": "2026-08-09T01:23:11.000Z",
-      "published_at": "2026-08-09T01:57:05.481Z"
+      "published_at": "2026-08-09T01:57:05.481Z",
+      "caption_edited_at": "2026-08-11T11:55:20.735Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:20.737Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-22-external-data-root.md": {
       "method": "sendPhoto",
@@ -738,7 +740,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/81",
       "queued_at": "2026-08-09T01:50:00.000Z",
-      "published_at": "2026-08-09T01:58:08.746Z"
+      "published_at": "2026-08-09T01:58:08.746Z",
+      "caption_edited_at": "2026-08-11T11:55:21.979Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:21.979Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-23-controlled-data-attachment.md": {
       "method": "sendPhoto",
@@ -747,7 +751,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/82",
       "queued_at": "2026-08-09T02:20:00.000Z",
-      "published_at": "2026-08-09T02:13:02.500Z"
+      "published_at": "2026-08-09T02:13:02.500Z",
+      "caption_edited_at": "2026-08-11T11:55:23.281Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:23.281Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-24-data-boundary.md": {
       "method": "sendPhoto",
@@ -756,7 +762,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/83",
       "queued_at": "2026-08-09T02:29:54.000Z",
-      "published_at": "2026-08-09T02:33:01.657Z"
+      "published_at": "2026-08-09T02:33:01.657Z",
+      "caption_edited_at": "2026-08-11T11:55:24.507Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:24.507Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-25-encrypted-private-recovery.md": {
       "method": "sendPhoto",
@@ -765,7 +773,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/84",
       "queued_at": "2026-08-09T06:25:00.000Z",
-      "published_at": "2026-08-09T06:22:38.812Z"
+      "published_at": "2026-08-09T06:22:38.812Z",
+      "caption_edited_at": "2026-08-11T11:55:25.750Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:25.750Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-26-external-user-data.md": {
       "method": "sendPhoto",
@@ -774,7 +784,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/85",
       "queued_at": "2026-08-09T06:58:00.000Z",
-      "published_at": "2026-08-09T07:01:36.443Z"
+      "published_at": "2026-08-09T07:01:36.443Z",
+      "caption_edited_at": "2026-08-11T11:55:26.964Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:26.964Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-27-explicit-backup-source.md": {
       "method": "sendPhoto",
@@ -783,7 +795,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/86",
       "queued_at": "2026-08-09T08:08:00.000Z",
-      "published_at": "2026-08-09T08:04:46.924Z"
+      "published_at": "2026-08-09T08:04:46.924Z",
+      "caption_edited_at": "2026-08-11T11:55:28.175Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:28.175Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-28-data-session-foundation.md": {
       "method": "sendPhoto",
@@ -792,7 +806,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/87",
       "queued_at": "2026-08-09T08:15:00.000Z",
-      "published_at": "2026-08-09T08:14:39.726Z"
+      "published_at": "2026-08-09T08:14:39.726Z",
+      "caption_edited_at": "2026-08-11T11:55:29.404Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:29.404Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-29-unconnected-shell.md": {
       "method": "sendPhoto",
@@ -801,7 +817,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/88",
       "queued_at": "2026-08-09T09:25:30.000Z",
-      "published_at": "2026-08-09T09:27:02.499Z"
+      "published_at": "2026-08-09T09:27:02.499Z",
+      "caption_edited_at": "2026-08-11T11:55:30.615Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:30.615Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-30-workspace-copy.md": {
       "method": "sendPhoto",
@@ -810,7 +828,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/89",
       "queued_at": "2026-08-09T11:45:00.000Z",
-      "published_at": "2026-08-09T11:43:49.203Z"
+      "published_at": "2026-08-09T11:43:49.203Z",
+      "caption_edited_at": "2026-08-11T11:55:31.872Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:31.872Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-31-save-new-version.md": {
       "method": "sendPhoto",
@@ -819,7 +839,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/90",
       "queued_at": "2026-08-09T11:55:00.000Z",
-      "published_at": "2026-08-09T11:50:15.543Z"
+      "published_at": "2026-08-09T11:50:15.543Z",
+      "caption_edited_at": "2026-08-11T11:55:33.102Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:33.102Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-32-demo-database.md": {
       "method": "sendPhoto",
@@ -828,7 +850,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/91",
       "queued_at": "2026-08-09T15:55:00.000Z",
-      "published_at": "2026-08-09T12:43:42.722Z"
+      "published_at": "2026-08-09T12:43:42.722Z",
+      "caption_edited_at": "2026-08-11T11:55:34.330Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:34.330Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-33-demo-workspace.md": {
       "method": "sendPhoto",
@@ -837,7 +861,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/92",
       "queued_at": "2026-08-09T16:15:00.000Z",
-      "published_at": "2026-08-09T12:54:34.687Z"
+      "published_at": "2026-08-09T12:54:34.687Z",
+      "caption_edited_at": "2026-08-11T11:55:35.651Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:35.651Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-34-people-trash.md": {
       "method": "sendPhoto",
@@ -846,7 +872,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/93",
       "queued_at": "2026-08-09T17:00:00.000Z",
-      "published_at": "2026-08-09T21:35:48.915Z"
+      "published_at": "2026-08-09T21:35:48.915Z",
+      "caption_edited_at": "2026-08-11T11:55:36.872Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:36.872Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-35-demo-workspace.md": {
       "method": "sendPhoto",
@@ -855,7 +883,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/94",
       "queued_at": "2026-08-09T17:15:00.000Z",
-      "published_at": "2026-08-09T21:42:01.371Z"
+      "published_at": "2026-08-09T21:42:01.371Z",
+      "caption_edited_at": "2026-08-11T11:55:38.118Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:38.118Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-36-local-wifi.md": {
       "method": "sendPhoto",
@@ -864,7 +894,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/95",
       "queued_at": "2026-08-09T17:30:00.000Z",
-      "published_at": "2026-08-09T21:43:04.802Z"
+      "published_at": "2026-08-09T21:43:04.802Z",
+      "caption_edited_at": "2026-08-11T11:55:39.536Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:39.536Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-37-mobile-session-label.md": {
       "method": "sendPhoto",
@@ -873,7 +905,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/96",
       "queued_at": "2026-08-09T17:45:00.000Z",
-      "published_at": "2026-08-09T21:44:08.371Z"
+      "published_at": "2026-08-09T21:44:08.371Z",
+      "caption_edited_at": "2026-08-11T11:55:40.762Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:40.762Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-38-responsive-table.md": {
       "method": "sendPhoto",
@@ -882,7 +916,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/97",
       "queued_at": "2026-08-09T18:00:00.000Z",
-      "published_at": "2026-08-09T21:45:11.683Z"
+      "published_at": "2026-08-09T21:45:11.683Z",
+      "caption_edited_at": "2026-08-11T11:55:42.180Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:42.181Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-39-touch-layout.md": {
       "method": "sendPhoto",
@@ -891,7 +927,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/98",
       "queued_at": "2026-08-09T20:20:00.000Z",
-      "published_at": "2026-08-09T21:46:15.132Z"
+      "published_at": "2026-08-09T21:46:15.132Z",
+      "caption_edited_at": "2026-08-11T11:55:43.421Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:43.421Z"
     },
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-40-demo-coverage.md": {
       "method": "sendPhoto",
@@ -900,7 +938,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/99",
       "queued_at": "2026-08-09T20:45:00.000Z",
-      "published_at": "2026-08-09T21:47:18.541Z"
+      "published_at": "2026-08-09T21:47:18.541Z",
+      "caption_edited_at": "2026-08-11T11:55:44.771Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:55:44.771Z"
     },
     "sunpole/uChurch|main|news/2026-08-10-uchurch-v17-11-41-start-center.md": {
       "method": "sendPhoto",
@@ -909,7 +949,9 @@
       ],
       "post_url": "https://t.me/uNewsLog/100",
       "queued_at": "2026-08-09T21:35:00.000Z",
-      "published_at": "2026-08-09T21:48:21.897Z"
+      "published_at": "2026-08-09T21:48:21.897Z",
+      "caption_edited_at": "2026-08-11T11:57:25.817Z",
+      "legacy_caption_repaired_at": "2026-08-11T11:57:25.830Z"
     },
     "sunpole/uChurch-public|main|news/2026-08-11-uchurch-v17-11-42-public-portal.md": {
       "method": "sendPhoto",
@@ -926,8 +968,9 @@
         102
       ],
       "post_url": "https://t.me/uNewsLog/102",
-      "queued_at": "2026-08-11T10:51:08.000Z",
-      "published_at": "2026-08-11T10:52:49.675Z"
+      "published_at": "2026-08-11T10:52:49.675Z",
+      "caption_edited_at": "2026-08-11T11:46:22.047Z",
+      "media_edited_at": "2026-08-11T11:46:22.048Z"
     },
     "sunpole/uChurch-public|main|news/2026-08-11-uchurch-v17-11-44-demo-qa.md": {
       "method": "sendPhoto",
@@ -935,8 +978,9 @@
         103
       ],
       "post_url": "https://t.me/uNewsLog/103",
-      "queued_at": "2026-08-11T11:30:00.000Z",
-      "published_at": "2026-08-11T11:24:02.978Z"
+      "published_at": "2026-08-11T11:24:02.978Z",
+      "caption_edited_at": "2026-08-11T11:46:50.292Z",
+      "media_edited_at": "2026-08-11T11:46:50.293Z"
     }
   }
 }

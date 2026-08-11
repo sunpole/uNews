@@ -268,7 +268,7 @@ function findManualTelegramFooter(text) {
     return "Manual URL detected: the policy layer adds the single Telegram link.";
   }
 
-  if (/(?:^|\r?\n)\s*(?:#[\p{L}\p{N}_-]+\s*){2,}$/u.test(source)) {
+  if (/(?:^|\r?\n)\s*(?:\u0425\u044d\u0448\u0442\u0435\u0433\u0438:\s*)?(?:#[\p{L}\p{N}_-]+\s*){2,}$/u.test(source)) {
     return "Manual hashtag footer detected: the policy layer adds the single Telegram hashtag set.";
   }
 

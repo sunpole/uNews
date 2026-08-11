@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.12 — 2026-08-11
+
+### Added
+
+- Read-only published-caption audit for a controlled cleanup of legacy Telegram posts.
+
+### Fixed
+
+- Source-order guard is line-ending independent on Windows and GitHub Actions.
+- Controlled caption repair restored Russian one-link, one-tag-set captions for uChurch messages 80-100; message 102 and 103 now use safe synthetic CRM screenshots.
+
 ## 0.3.11 — 2026-08-11
 
 ### Fixed

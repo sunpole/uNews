@@ -307,6 +307,22 @@ const fixtures = [
     expected: "Manual hashtag footer detected",
   },
   {
+    name: "labelled manual Telegram hashtags are rejected",
+    shouldPass: false,
+    frontMatter: {
+      type: "patch",
+      project: "uNews",
+      series: "unews",
+      title: "Duplicate labelled hashtags",
+      version: "0.3.12",
+      queued_at: "2026-08-11T12:00:00Z",
+      repo_url: "https://github.com/sunpole/uNews",
+      image: "safe.png",
+    },
+    body: "Patch text.\n\n\u0425\u044d\u0448\u0442\u0435\u0433\u0438: #uNews #\u0442\u044b\u041d\u043e\u0432\u043e\u0441\u0442\u0438 #Sunpole",
+    expected: "Manual hashtag footer detected",
+  },
+  {
     name: "GitHub credential-like text",
     shouldPass: false,
     frontMatter: {
