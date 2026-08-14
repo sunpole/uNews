@@ -1,16 +1,7 @@
 {
   "schema": 1,
-  "updated_at": "2026-08-14T13:23:49.741Z",
+  "updated_at": "2026-08-14T17:01:07.978Z",
   "errors": [
-    {
-      "kind": "project-scan",
-      "project": "sunpole/wors_2",
-      "key": null,
-      "version": null,
-      "errors": [
-        "Project scan failed: fetch failed"
-      ]
-    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
