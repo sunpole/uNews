@@ -1,15 +1,7 @@
 {
   "schema": 1,
-  "updated_at": "2026-08-18T03:13:50.630Z",
+  "updated_at": "2026-08-18T03:15:14.105Z",
   "errors": [
-    {
-      "project": "sunpole/uChurch-public",
-      "key": "sunpole/uChurch-public|main|news/2026-08-18-uchurch-v17-11-51-staging-acceptance.md",
-      "version": "17.11.51",
-      "errors": [
-        "sunpole/uChurch-public|main|news/2026-08-18-uchurch-v17-11-51-staging-acceptance.md image 2026-08-18-uchurch-v17-11-51-staging-acceptance.png: extension declares png, bytes are jpeg"
-      ]
-    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
