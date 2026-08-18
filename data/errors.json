@@ -1,7 +1,15 @@
 {
   "schema": 1,
-  "updated_at": "2026-08-18T03:15:14.105Z",
+  "updated_at": "2026-08-18T08:47:41.604Z",
   "errors": [
+    {
+      "project": "sunpole/uChurch-public",
+      "key": "sunpole/uChurch-public|main|news/2026-08-18-uchurch-v17-11-66-demo-package-opening.md",
+      "version": "17.11.66",
+      "errors": [
+        "Patchnote policy failed for sunpole/uChurch-public|main|news/2026-08-18-uchurch-v17-11-66-demo-package-opening.md:\n- Missing image/images: Telegram posts require a safe visual asset."
+      ]
+    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
