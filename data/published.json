@@ -23,6 +23,7 @@
     "sunpole/uChurch-public|main|news/2026-08-21-uchurch-v17-11-75-https-hardening.md",
     "sunpole/uChurch-public|main|news/2026-08-21-uchurch-v17-11-76-copy-only-preflight.md",
     "sunpole/uChurch-public|main|news/2026-08-21-uchurch-v17-11-77-staging-deployment-guard.md",
+    "sunpole/uChurch-public|main|news/2026-08-21-uchurch-v17-11-78-pilot-alignment.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-21-public-development.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-22-external-data-root.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-23-controlled-data-attachment.md",
@@ -1161,6 +1162,15 @@
       "post_url": "https://t.me/uNewsLog/121",
       "queued_at": "2026-08-21T16:40:00.000Z",
       "published_at": "2026-08-21T13:26:15.279Z"
+    },
+    "sunpole/uChurch-public|main|news/2026-08-21-uchurch-v17-11-78-pilot-alignment.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        122
+      ],
+      "post_url": "https://t.me/uNewsLog/122",
+      "queued_at": "2026-08-21T17:10:00.000Z",
+      "published_at": "2026-08-21T14:49:31.640Z"
     }
   }
 }
