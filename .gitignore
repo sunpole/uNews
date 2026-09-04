@@ -35,3 +35,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Local raw screenshots for uNews SelfShot; never publish
+news/_raw/
