@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "pipeline": "unews-selfshot-v1",
+  "origin": "real",
+  "subject": "telegram-channel",
+  "source_name": "telegram-desktop-raw.png",
+  "source_sha256": "B55ED2C509CC04FAF55AAF2508B94D46C00D38D482988D621D0EC9AE20459F60",
+  "source_size": [
+    2559,
+    1395
+  ],
+  "crop": {
+    "x": 499,
+    "y": 40,
+    "width": 1200,
+    "height": 750
+  },
+  "output_name": "2026-09-04-unews-v0-3-15-selfshot-pipeline.jpg",
+  "output_sha256": "16EC97C8D3CA19DC12AB51FDFBEE343E18FC8CCFF1939198360815BD1FC98090",
+  "output_size": [
+    480,
+    300
+  ],
+  "operations": [
+    "crop",
+    "resize"
+  ],
+  "processed_utc": "2026-09-04T11:04:00.000Z",
+  "raw_source_committed": false
+}

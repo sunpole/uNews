@@ -7,11 +7,11 @@ version: 0.3.14
 queued_at: 2026-09-04T09:46:00Z
 repo_url: https://github.com/sunpole/uNews
 web_url: https://sunpole.github.io/uNews/
-image: 2026-09-04-unews-v0-3-14-project-intro-links.png
+image: 2026-09-04-unews-v0-3-14-project-intro-links-selfshot.jpg
 image_origin: real
 image_subject: telegram-channel
 image_pipeline: unews-selfshot-v1
-image_meta: 2026-09-04-unews-v0-3-14-project-intro-links.selfshot.json
+image_meta: 2026-09-04-unews-v0-3-14-project-intro-links-selfshot.selfshot.json
 ---
 
 uNews получил новое правило для истории проектов в Telegram.
