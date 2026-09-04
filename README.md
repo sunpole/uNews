@@ -6,7 +6,7 @@
 
 **uNews** — единая система публикации новостей, патчноутов и отчётов разработки по проектам Антона.
 
-Текущая версия: **0.3.14**. Policy не допускает ручную ссылку или ручный набор меток в тексте патчноута: финальный Telegram footer добавляется ровно один раз. Аудит и repair-механизм позволяют контролируемо исправлять подтверждённые старые подписи. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
+Текущая версия: **0.3.15**. Policy не допускает ручную ссылку или ручный набор меток в тексте патчноута: финальный Telegram footer добавляется ровно один раз. Аудит и repair-механизм позволяют контролируемо исправлять подтверждённые старые подписи. Стабильная версия до автоматизации сохранена в ветке [`stable/manual-publishing-v0.1.0`](https://github.com/sunpole/uNews/tree/stable/manual-publishing-v0.1.0).
 
 Главная идея: каждый проект хранит свои новости в папке `news/`, а uNews забирает эти патчноуты и публикует их в Telegram-канал через бота.
 
@@ -255,3 +255,22 @@ Workflow `Edit published uNews post` читает
 `.github/unews-edit-request.json`, повторно применяет текущую policy и
 image-integrity checks и меняет существующий Telegram message по сохранённому
 `message_id`. Новый дубликат не создаётся.
+
+
+## uNews SelfShot Pipeline
+
+Для постов о самом uNews используется реальный Telegram/queue/workflow visual,
+а не изображение другого проекта.
+
+На Windows сырой screenshot обрабатывается одной командой:
+
+```text
+tools\Prepare-uNewsSelfShot.cmd "<raw screenshot>" "<news patchnote>" -Open
+```
+
+Скрипт отрезает левую колонку личных чатов, нормализует изображение до
+1600x1000, пишет SHA-256 metadata и сам добавляет обязательные поля
+`image_origin`, `image_subject`, `image_pipeline`, `image_meta`.
+
+Raw screenshots не должны попадать в Git. Подробности:
+`docs/SELF_POST_VISUAL_POLICY.md`.
