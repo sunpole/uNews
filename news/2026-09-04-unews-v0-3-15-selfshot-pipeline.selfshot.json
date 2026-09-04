@@ -16,15 +16,15 @@
     "height": 750
   },
   "output_name": "2026-09-04-unews-v0-3-15-selfshot-pipeline.jpg",
-  "output_sha256": "16EC97C8D3CA19DC12AB51FDFBEE343E18FC8CCFF1939198360815BD1FC98090",
+  "output_sha256": "09C3CE9D59BE56CD6982F4676EA349360D15AC3F1C7FEF9ECE31C40D380156EB",
   "output_size": [
-    480,
-    300
+    320,
+    200
   ],
   "operations": [
     "crop",
     "resize"
   ],
-  "processed_utc": "2026-09-04T11:04:00.000Z",
+  "processed_utc": "2026-09-04T11:12:00.000Z",
   "raw_source_committed": false
 }
