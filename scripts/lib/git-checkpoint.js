@@ -8,7 +8,7 @@ function git(args, options = {}) {
 export function checkpointPublishedState(key) {
   if (process.env.UNEWS_GIT_CHECKPOINT !== "1") return false;
 
-  git(["add", "--", "data/published.json"]);
+  git(["add", "--", "data/published.json", "data/project-intros.json"]);
   try {
     git(["diff", "--cached", "--quiet"], { quiet: true });
     return false;

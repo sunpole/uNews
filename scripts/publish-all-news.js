@@ -21,6 +21,7 @@ import {
 } from "./lib/state.js";
 import { createGitHubClient } from "./lib/github-client.js";
 import { checkpointPublishedState } from "./lib/git-checkpoint.js";
+import { assertProjectIntroRequirement, loadProjectIntroState, recordProjectIntro } from "./lib/project-intros.js";
 import { fetchValidatedImage, validatedImageBlob } from "./lib/image-integrity.js";
 import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
@@ -130,10 +131,11 @@ function telegramDeliverySummary(images) {
   }));
 }
 
-async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
+async function publishPatchnote(patchnote, { dryRun, token, chatId, introUrl = null }) {
   const policy = assertPublicationPolicy({
     frontMatter: patchnote.frontMatter,
     body: patchnote.body,
+    introUrl,
     label: patchnote.key,
   });
 
@@ -160,6 +162,7 @@ async function publishPatchnote(patchnote, { dryRun, token, chatId }) {
         captionWasTruncated: policy.captionWasTruncated,
         link: policy.link,
         hashtags: policy.hashtags,
+        introUrl: policy.introUrl,
       },
       null,
       2,
@@ -194,7 +197,9 @@ async function main() {
 
   const config = await loadJson("projects.json");
   const statePath = "data/published.json";
+  const introStatePath = "data/project-intros.json";
   const state = normalizePublishedState(await loadJson(statePath));
+  const introState = await loadProjectIntroState();
   const publishedSet = new Set(state.published || []);
 
   const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -234,13 +239,16 @@ async function main() {
       if (!isSemanticVersion(patchnote.frontMatter.version)) {
         throw new Error(`Invalid semantic version: ${patchnote.frontMatter.version || "missing"}`);
       }
-      const policy = assertPublicationPolicy({ frontMatter: patchnote.frontMatter, body: patchnote.body, label: patchnote.key });
+      const intro = assertProjectIntroRequirement({ state: introState, frontMatter: patchnote.frontMatter });
+      const introUrl = intro?.post_url || null;
+      const policy = assertPublicationPolicy({ frontMatter: patchnote.frontMatter, body: patchnote.body, introUrl, label: patchnote.key });
       const auditedImages = await loadValidatedRemoteImages(patchnote, policy.imageNames);
       inspected.push({
         ...patchnote,
         queuedAt,
         queuedAtSource: queueTime.source,
         imageIntegrity: imageIntegritySummary(auditedImages),
+        introUrl,
         errors: [],
       });
     } catch (error) {
@@ -260,7 +268,7 @@ async function main() {
   if (args.dryRun) {
     console.log(`Would publish ${batch.selected.length} item(s) in FIFO order (limit: ${MAX_POSTS_PER_RUN}).`);
     for (const patchnote of batch.selected) {
-      await publishPatchnote(patchnote, { dryRun: true, token, chatId });
+      await publishPatchnote(patchnote, { dryRun: true, token, chatId, introUrl: patchnote.introUrl || null });
     }
     return;
   }
@@ -277,7 +285,7 @@ async function main() {
   for (const patchnote of batch.selected) {
     if (publishedCount > 0) await delay(TELEGRAM_POST_INTERVAL_MS);
     console.log(`Batch item ${publishedCount + 1}/${batch.selected.length}: ${patchnote.key}.`);
-    const result = await publishPatchnote(patchnote, { dryRun: false, token, chatId });
+    const result = await publishPatchnote(patchnote, { dryRun: false, token, chatId, introUrl: patchnote.introUrl || null });
     const publishedAt = new Date().toISOString();
     publishedSet.add(patchnote.key);
     state.published = [...publishedSet].sort();
@@ -287,8 +295,14 @@ async function main() {
       post_url: result.postUrl,
       queued_at: patchnote.queuedAt,
       published_at: publishedAt,
+      project: patchnote.frontMatter.project || null,
+      series: patchnote.frontMatter.series || null,
+      type: patchnote.frontMatter.type || null,
     };
     await writeJsonAtomic(statePath, state);
+    if (recordProjectIntro({ state: introState, frontMatter: patchnote.frontMatter, key: patchnote.key, result, publishedAt })) {
+      await writeJsonAtomic(introStatePath, introState);
+    }
     checkpointPublishedState(patchnote.key);
     publishedCount += 1;
     console.log(`Immediately recorded published state: ${patchnote.key}.`);

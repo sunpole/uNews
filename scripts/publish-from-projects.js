@@ -13,6 +13,7 @@ import { parsePatchnote } from "./lib/front-matter.js";
 import { validateImageBytes, validatedImageBlob } from "./lib/image-integrity.js";
 import { normalizeTelegramPhoto, telegramPhotoSummary } from "./lib/telegram-photo.js";
 import { publishToTelegram } from "./lib/telegram-client.js";
+import { assertProjectIntroRequirement, loadProjectIntroState } from "./lib/project-intros.js";
 
 function printUsage() {
   console.log(`Usage:
@@ -144,7 +145,9 @@ async function main() {
   const markdownPath = path.resolve(args.filePath);
   const markdown = await readFile(markdownPath, "utf8");
   const { frontMatter, body } = parsePatchnote(markdown, markdownPath);
-  const policy = assertPublicationPolicy({ frontMatter, body, label: markdownPath });
+  const introState = await loadProjectIntroState();
+  const intro = assertProjectIntroRequirement({ state: introState, frontMatter });
+  const policy = assertPublicationPolicy({ frontMatter, body, introUrl: intro?.post_url || null, label: markdownPath });
   const imagePaths = resolveImagePaths(markdownPath, policy.imageNames);
   const validatedImages = await loadValidatedLocalImages(imagePaths, policy.imageNames);
   const telegramImages = prepareTelegramImages(validatedImages);
@@ -166,6 +169,7 @@ async function main() {
     messageWasTruncated: policy.messageWasTruncated,
     link: policy.link,
     hashtags: policy.hashtags,
+    introUrl: policy.introUrl,
     captionPreview: policy.captionText,
   };
 
