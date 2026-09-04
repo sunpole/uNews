@@ -8,6 +8,7 @@ const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст дл
 const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
 const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р•|Р–|Р—|Р™|Рљ|Рњ|Рђ|СЃ|С‚|СЊ|С‹|СЋ|СЏ|СЂ|С‡|С€|С‰)/u;
 const REAL_IMAGE_POLICY_START = Date.parse("2026-09-04T09:30:00Z");
+const UNEWS_SELF_VISUAL_SUBJECTS = new Set(["telegram-channel", "telegram-post", "publish-workflow", "queue-status"]);
 
 const HASHTAG_MAPPING = new Map([
   ["uSugar", "#uSugar #тыСахар #uNews #Sunpole"],
@@ -148,6 +149,22 @@ function validatePatchnote({ frontMatter, body }) {
     }
   } else if (imageOrigin && imageOrigin !== "real") {
     errors.push("Unsupported image_origin: only real is accepted.");
+  }
+
+  if (frontMatter.project === "uNews" && Number.isFinite(queuedAtMs) && queuedAtMs >= REAL_IMAGE_POLICY_START) {
+    const subject = String(frontMatter.image_subject || "").toLowerCase();
+    const pipeline = String(frontMatter.image_pipeline || "").toLowerCase();
+    const meta = String(frontMatter.image_meta || "");
+
+    if (!UNEWS_SELF_VISUAL_SUBJECTS.has(subject)) {
+      errors.push("uNews self-post requires image_subject: telegram-channel, telegram-post, publish-workflow or queue-status.");
+    }
+    if (pipeline !== "unews-selfshot-v1") {
+      errors.push("uNews self-post requires image_pipeline: unews-selfshot-v1.");
+    }
+    if (!/^[A-Za-z0-9][A-Za-z0-9._-]*\.selfshot\.json$/i.test(meta) || meta.includes("..")) {
+      errors.push("uNews self-post requires a safe image_meta *.selfshot.json file.");
+    }
   }
 
   if (imageNames.length === 0) {
