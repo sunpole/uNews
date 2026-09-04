@@ -1059,3 +1059,26 @@ PNG всё равно может быть вымышленным.
 `Edit published uNews post` и `.github/unews-edit-request.json`.
 Repair обязан повторно применить текущую policy, взять исходный message_id из
 `data/published.json`, проверить media и изменить существующее сообщение.
+
+
+## 35. uNews SelfShot Pipeline v0.3.15
+
+Для нового `project: uNews` self-post запрещено использовать визуал другого
+проекта как основную картинку. Использовать реальную работу uNews:
+Telegram channel/post, publish workflow или queue status.
+
+На Windows предпочтительный путь:
+`tools\Prepare-uNewsSelfShot.cmd <raw> <patchnote>`.
+
+Raw screenshot не коммитить: он может содержать private chat list и другие
+локальные данные. В public Git попадают только подготовленный crop и
+`*.selfshot.json`.
+
+Обязательные поля:
+`image_origin: real`,
+`image_subject`,
+`image_pipeline: unews-selfshot-v1`,
+`image_meta: *.selfshot.json`.
+
+Если SelfShot tool существует, агент не должен предлагать ручную серию
+crop/resize/metadata-команд вместо него.
