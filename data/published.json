@@ -66,6 +66,7 @@
     "sunpole/uImposition|main|news/2026-07-26-uimposition-v0-7-0-alpha-3-real-alternatives.md",
     "sunpole/uImposition|main|news/2026-07-27-uimposition-v0-7-0-alpha-4-work-and-turn.md",
     "sunpole/uImposition|main|news/2026-07-27-uimposition-v0-7-0-alpha-5-user-production-plans.md",
+    "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1-update.md",
     "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
@@ -1286,6 +1287,18 @@
       "project": "uMontage",
       "series": "umontage",
       "type": "intro"
+    },
+    "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1-update.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        134
+      ],
+      "post_url": "https://t.me/uNewsLog/134",
+      "queued_at": "2026-09-04T09:31:00.000Z",
+      "published_at": "2026-09-04T09:46:08.632Z",
+      "project": "uMontage",
+      "series": "umontage",
+      "type": "feature"
     }
   }
 }
