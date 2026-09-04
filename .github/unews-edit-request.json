@@ -1,6 +1,6 @@
 {
-  "enabled": false,
-  "mode": "caption",
-  "key": "",
-  "requested_at": null
+  "enabled": true,
+  "mode": "media",
+  "key": "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1.md",
+  "requested_at": "2026-09-04T09:34:00Z"
 }
