@@ -81,6 +81,7 @@
     "sunpole/uNews|main|news/2026-07-22-unews-v0-3-6-checkpoint-identity.md",
     "sunpole/uNews|main|news/2026-07-22-unews-v0-3-7-image-integrity.md",
     "sunpole/uNews|main|news/2026-07-25-unews-v0-3-8-telegram-photo-normalization.md",
+    "sunpole/uNews|main|news/2026-09-04-unews-v0-3-14-project-intro-links.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
@@ -1298,6 +1299,18 @@
       "published_at": "2026-09-04T09:46:08.632Z",
       "project": "uMontage",
       "series": "umontage",
+      "type": "feature"
+    },
+    "sunpole/uNews|main|news/2026-09-04-unews-v0-3-14-project-intro-links.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        135
+      ],
+      "post_url": "https://t.me/uNewsLog/135",
+      "queued_at": "2026-09-04T09:46:00.000Z",
+      "published_at": "2026-09-04T09:47:12.119Z",
+      "project": "uNews",
+      "series": "unews",
       "type": "feature"
     }
   }
