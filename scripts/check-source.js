@@ -88,6 +88,8 @@ requireIncludes(
 requireIncludes(batchPublisher, "loadValidatedRemoteImages", "batch publisher");
 requireIncludes(batchPublisher, "prepareTelegramImages", "batch publisher");
 requireIncludes(batchPublisher, "validatedImageBlob(validated)", "batch publisher");
+requireIncludes(batchPublisher, "assertProjectIntroRequirement", "batch publisher project-intro policy");
+requireIncludes(batchPublisher, "recordProjectIntro", "batch publisher project-intro checkpoint");
 requireSourceOrder(
   batchPublisher,
   "const auditedImages = await loadValidatedRemoteImages",
@@ -123,6 +125,7 @@ requireIncludes(
 requireIncludes(localPublisher, "loadValidatedLocalImages", "local publisher");
 requireIncludes(localPublisher, "prepareTelegramImages", "local publisher");
 requireIncludes(localPublisher, "validatedImageBlob(validated)", "local publisher");
+requireIncludes(localPublisher, "assertProjectIntroRequirement", "local publisher project-intro policy");
 requireSourceOrder(
   localPublisher,
   "const validatedImages = await loadValidatedLocalImages",

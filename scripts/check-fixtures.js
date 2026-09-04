@@ -355,6 +355,66 @@ const fixtures = [
     expected: "Secret-like text detected: assigned credential",
   },
   {
+    name: "new post requires real image declaration",
+    shouldPass: false,
+    frontMatter: {
+      type: "feature",
+      project: "uMontage",
+      series: "umontage",
+      title: "Control update",
+      version: "0.3.0-alpha.10.1",
+      queued_at: "2026-09-04T10:00:00Z",
+      repo_url: "https://github.com/sunpole/uMontage-releases",
+      image: "real.png",
+    },
+    introUrl: "https://t.me/uNewsLog/133",
+    body: "Короткий текст для Telegram:\nОбновление рабочего процесса uMontage.",
+    expected: "Missing required field: image_origin",
+  },
+  {
+    name: "generated placeholder image is blocked",
+    shouldPass: false,
+    frontMatter: {
+      type: "feature",
+      project: "uMontage",
+      series: "umontage",
+      title: "Control update",
+      version: "0.3.0-alpha.10.1",
+      queued_at: "2026-09-04T10:00:00Z",
+      repo_url: "https://github.com/sunpole/uMontage-releases",
+      image: "placeholder.png",
+      image_origin: "generated",
+    },
+    introUrl: "https://t.me/uNewsLog/133",
+    body: "Короткий текст для Telegram:\nОбновление рабочего процесса uMontage.",
+    expected: "Only image_origin: real",
+  },
+  {
+    name: "uMontage real image and intro link pass",
+    shouldPass: true,
+    frontMatter: {
+      type: "feature",
+      project: "uMontage",
+      series: "umontage",
+      title: "Control update",
+      version: "0.3.0-alpha.10.1",
+      queued_at: "2026-09-04T10:00:00Z",
+      repo_url: "https://github.com/sunpole/uMontage-releases",
+      image: "real.png",
+      image_origin: "real",
+    },
+    introUrl: "https://t.me/uNewsLog/133",
+    body: "Короткий текст для Telegram:\nОбновление рабочего процесса uMontage.",
+    assert(policy) {
+      if (!policy.captionText.includes("О проекте: https://t.me/uNewsLog/133")) {
+        throw new Error("uMontage update has no intro link");
+      }
+      if (!policy.captionText.includes("#uMontage #тыМонтаж #uNews #Sunpole")) {
+        throw new Error("uMontage update has no dedicated hashtags");
+      }
+    },
+  },
+  {
     name: "uSugar medical/private risk",
     shouldPass: false,
     frontMatter: validUsugarFrontMatter,
@@ -369,6 +429,7 @@ for (const fixture of fixtures) {
   const policy = buildPublicationPolicy({
     frontMatter: fixture.frontMatter,
     body: fixture.body,
+    introUrl: fixture.introUrl || null,
   });
 
   try {

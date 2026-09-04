@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "series": {
+    "unews": {
+      "project": "uNews",
+      "series": "unews",
+      "key": "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
+      "message_id": 33,
+      "post_url": "https://t.me/uNewsLog/33",
+      "published_at": "2026-07-18T18:34:10.307Z"
+    },
+    "umontage": {
+      "project": "uMontage",
+      "series": "umontage",
+      "key": "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1.md",
+      "message_id": 133,
+      "post_url": "https://t.me/uNewsLog/133",
+      "published_at": "2026-09-04T09:28:52.624Z"
+    }
+  },
+  "legacy_without_intro": [
+    "500td",
+    "goart",
+    "time-rift",
+    "uchurch",
+    "udream",
+    "unews",
+    "usugar"
+  ]
+}
