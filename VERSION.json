@@ -1,28 +1,21 @@
 {
   "schemaVersion": 1,
   "project": "uNews",
-  "version": "0.3.13",
-  "releaseDate": "2026-08-11",
-  "status": "caption-repair-complete",
+  "version": "0.3.14",
+  "releaseDate": "2026-09-04",
+  "status": "project-intro-link-policy",
   "productionReady": true,
   "summary": {
-    "ru": "uNews блокирует оба известных ручных формата footer, а audit и repair-механизм подтверждают чистое состояние опубликенных подписей.",
-    "en": "uNews blocks both known manual footer formats, while its audit and repair tools confirm a clean published-caption state."
+    "ru": "uNews требует реальные изображения для новых постов, хранит intro/root-пост проекта, добавляет ссылку «О проекте» в будущие публикации и умеет безопасно править уже опубликованные сообщения через GitHub Actions.",
+    "en": "uNews requires real images for new posts, stores each project's intro/root post, links future updates back to it, and can repair published messages through GitHub Actions."
   },
   "verified": {
-    "sourcePreserved": true,
-    "newsReadmeIgnored": true,
-    "datedMarkdownRequired": true,
-    "documentationTypeAllowed": true,
-    "auditTypeAllowed": true,
-    "manualTelegramFooterBlocked": true,
-    "publishedCaptionAudit": true,
-    "maxPhotoBytes": 10485760,
-    "maxDimensionSum": 10000,
-    "safeDimensionSum": 9800,
-    "maxAspectRatio": 20,
-    "m4Regression": "1440x8625",
-    "safeRegression": "1180x1189"
+    "realImageDeclarationRequired": true,
+    "generatedPlaceholderBlocked": true,
+    "projectIntroRegistry": true,
+    "futurePostsLinkToIntro": true,
+    "publishedPostRepairWorkflow": true,
+    "sourceImageIntegrityPreserved": true
   },
   "releasePolicy": {
     "rollbackBranch": "release/v{version}",
@@ -34,8 +27,8 @@
     "publishedTagsAreImmutable": true
   },
   "nextTarget": {
-    "version": "0.3.14",
-    "ru": "Добавить более явное разделение bot_failed / queue_has_errors / nothing_ready в health.json.",
-    "en": "Add clearer bot_failed / queue_has_errors / nothing_ready distinction in health.json."
+    "version": "0.3.15",
+    "ru": "Постепенно назначить корректные intro/root-посты для legacy-series.",
+    "en": "Gradually assign correct intro/root posts for legacy series."
   }
 }

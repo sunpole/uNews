@@ -1014,3 +1014,48 @@ If Telegram refuses media replacement, repair only the caption with `npm run edi
 ## 31. Безопасность credentials v0.3.4
 
 Перед завершением задачи соблюдать [SECURITY.md](SECURITY.md). Не добавлять локальные environment-файлы, private keys, credential JSON, токены, пароли, QR-коды или приватные идентификаторы в Git, патчноуты, изображения, issues, commit messages и workflow inputs. Изменения в `.github/workflows/`, `scripts/` и `projects.json` должны проверяться владельцем согласно `.github/CODEOWNERS`.
+
+
+## 32. Project intro link policy v0.3.14
+
+Для любого нового проекта/series сначала обязателен `type: intro`.
+Это короткая мини-презентация: что делает проект, какую реальную задачу решает
+и в каком состоянии находится сейчас.
+
+После публикации intro uNews сохраняет Telegram URL в
+`data/project-intros.json`. Все следующие публикации этой series автоматически
+получают строку `О проекте: <intro post URL>` из policy-слоя. Не добавлять
+эту ссылку вручную в body.
+
+Legacy-series, существовавшие до правила, могут временно находиться в
+`legacy_without_intro`. Новую series туда добавлять нельзя вместо intro.
+
+## 33. Real image policy v0.3.14
+
+Для новых публикаций обязательно:
+
+```yaml
+image_origin: real
+```
+
+Допустимо:
+- реальный screenshot приложения/сайта/игры;
+- реальная фотография;
+- фактический экспорт результата проекта;
+- реальный диагностический экран без секретов.
+
+Недопустимо:
+- AI-generated изображение;
+- вымышленный интерфейс;
+- декоративный placeholder;
+- пример, выдаваемый за фактический результат.
+
+Byte-level integrity не заменяет происхождение изображения: технически валидный
+PNG всё равно может быть вымышленным.
+
+## 34. Published-post repair v0.3.14
+
+Уже опубликованный ошибочный пост не публиковать повторно. Использовать workflow
+`Edit published uNews post` и `.github/unews-edit-request.json`.
+Repair обязан повторно применить текущую policy, взять исходный message_id из
+`data/published.json`, проверить media и изменить существующее сообщение.

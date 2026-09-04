@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.14 — 2026-09-04
+
+### Added
+
+- project-intro registry and automatic `О проекте:` links for future updates;
+- first-post rule for new series: `type: intro` before ordinary updates;
+- `image_origin: real` policy for new posts;
+- dedicated uMontage hashtag mapping;
+- GitHub Actions repair path for editing an existing Telegram message by saved message_id.
+
+### Safety
+
+- generated/placeholder visuals are blocked for new posts even if their bytes are valid;
+- repair re-runs publication policy and image validation and does not create a duplicate.
+
+
 ## 0.3.13 — 2026-08-11
 
 ### Fixed
