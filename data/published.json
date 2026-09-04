@@ -82,6 +82,7 @@
     "sunpole/uNews|main|news/2026-07-22-unews-v0-3-7-image-integrity.md",
     "sunpole/uNews|main|news/2026-07-25-unews-v0-3-8-telegram-photo-normalization.md",
     "sunpole/uNews|main|news/2026-09-04-unews-v0-3-14-project-intro-links.md",
+    "sunpole/uNews|main|news/2026-09-04-unews-v0-3-15-selfshot-pipeline.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-4-4-open-work-unews.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-0-ocr-new-sources.md",
     "sunpole/uSugar|main|news/2026-06-21-usugar-v1-5-1-ocr-safety-hotfix.md",
@@ -1314,6 +1315,18 @@
       "type": "feature",
       "caption_edited_at": "2026-09-04T11:16:57.182Z",
       "media_edited_at": "2026-09-04T11:16:57.182Z"
+    },
+    "sunpole/uNews|main|news/2026-09-04-unews-v0-3-15-selfshot-pipeline.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        136
+      ],
+      "post_url": "https://t.me/uNewsLog/136",
+      "queued_at": "2026-09-04T11:04:00.000Z",
+      "published_at": "2026-09-04T11:17:39.447Z",
+      "project": "uNews",
+      "series": "unews",
+      "type": "feature"
     }
   }
 }
