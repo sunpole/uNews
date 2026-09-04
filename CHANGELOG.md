@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.3.15 — 2026-09-04
+
+### Added
+
+- Windows SelfShot preparation tool for real uNews Telegram screenshots;
+- 1600x1000 tested crop preset that excludes the private chat list;
+- sidecar SHA-256/crop metadata;
+- strict uNews self-post visual fields and regression check.
+
+### Safety
+
+- raw desktop screenshots are never auto-committed or uploaded;
+- new uNews self-posts must show real uNews Telegram/queue/workflow evidence;
+- images of other projects cannot satisfy the self-post visual contract.
+
+
 ## 0.3.14 — 2026-09-04
 
 ### Added
