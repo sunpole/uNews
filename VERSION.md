@@ -1,22 +1,20 @@
-# uNews 0.3.14
+# uNews 0.3.15
 
-Текущая версия: `0.3.14` — project-intro links, real-image policy и безопасный repair опубликованных Telegram-постов.
+Текущая версия: `0.3.15` — SelfShot Pipeline для реальных визуалов самого uNews.
 
 ## Что изменилось
 
-- новый проект сначала публикует `type: intro`;
-- Telegram URL intro сохраняется в `data/project-intros.json`;
-- будущие посты той же series автоматически получают строку `О проекте:`;
-- новые посты обязаны указывать `image_origin: real`;
-- generated/placeholder visuals блокируются policy;
-- добавлен GitHub Actions workflow для изменения уже опубликованного message_id без дубля;
-- uMontage получает отдельный footer mapping `#uMontage #тыМонтаж #uNews #Sunpole`.
+- добавлен `tools/Prepare-uNewsSelfShot.ps1/.cmd`;
+- raw Telegram screenshot обрабатывается локально и не коммитится;
+- preset отрезает левую колонку личных чатов;
+- final image нормализуется до 1600x1000;
+- рядом создаётся `*.selfshot.json` с SHA-256, размером и crop metadata;
+- patchnote получает обязательные `image_origin`, `image_subject`,
+  `image_pipeline`, `image_meta`;
+- policy блокирует self-post uNews без реального визуала самого uNews.
 
-## Почему
+## Рабочая модель
 
-Технически валидная картинка не обязательно является честным изображением
-проекта. Отдельные патчи без ссылки на первое представление проекта также
-плохо объясняют контекст новому читателю.
+`uNews пишет о себе → показываем реальный Telegram/queue/workflow uNews`.
 
-0.3.14 делает историю нового проекта связной: сначала короткая презентация,
-затем обновления со ссылкой назад на неё.
+`uNews публикует другой проект → показываем реальный визуал этого проекта`.
