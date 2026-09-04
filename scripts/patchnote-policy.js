@@ -6,7 +6,8 @@ const ALLOWED_TYPES = new Set(["intro", "test", "release", "patch", "bugfix", "d
 const REQUIRED_WORD_RE = /(патч|обновление|релиз|документационное обновление|аудит|отч[её]т)/i;
 const SHORT_TEXT_RE = /(?:^|\r?\n)(?:#{1,6}\s*)?Короткий текст для Telegram:\s*\r?\n([\s\S]*)$/i;
 const RUSSIAN_REQUIRED_PROJECTS = new Set(["uSugar"]);
-const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р•|Р–|Р—|Р™|Рљ|Рњ|Рђ|СЃ|С‚|СЊ|С‹|СЋ|СЏ|СЂ|С‡|С€|С‰)/u;\nconst REAL_IMAGE_POLICY_START = Date.parse("2026-09-04T09:30:00Z");
+const BROKEN_TEXT_RE = /(\uFFFD|\?{3,}|Рџ|РЎ|Рќ|Рћ|Р‘|Р“|Р”|Р•|Р–|Р—|Р™|Рљ|Рњ|Рђ|СЃ|С‚|СЊ|С‹|СЋ|СЏ|СЂ|С‡|С€|С‰)/u;
+const REAL_IMAGE_POLICY_START = Date.parse("2026-09-04T09:30:00Z");
 
 const HASHTAG_MAPPING = new Map([
   ["uSugar", "#uSugar #тыСахар #uNews #Sunpole"],
@@ -61,7 +62,10 @@ export function buildPublicationPolicy({ frontMatter, body, introUrl = null }) {
   const mainText = ensureRequiredWording(sourceText, frontMatter.type);
   const link = buildLink(frontMatter);
   const hashtags = getProjectHashtags(frontMatter.project, frontMatter.series);
-  const introLine = introUrl && String(frontMatter.type || "").toLowerCase() !== "intro"\n    ? `\\nО проекте: ${introUrl}`\n    : "";\n  const footer = `Ссылка: ${link}${introLine}\\n\\n${hashtags}`;
+  const introLine = introUrl && String(frontMatter.type || "").toLowerCase() !== "intro"
+    ? `\nО проекте: ${introUrl}`
+    : "";
+  const footer = `Ссылка: ${link}${introLine}\n\n${hashtags}`;
 
   const caption = limitWithFooter(mainText, footer, TELEGRAM_CAPTION_LIMIT);
   const message = limitWithFooter(mainText, footer, TELEGRAM_MESSAGE_LIMIT);
@@ -132,7 +136,21 @@ function validatePatchnote({ frontMatter, body }) {
     errors.push("Invalid queued_at: date does not exist.");
   }
 
-  const imageNames = getImageNames(frontMatter);\n  const queuedAtMs = Date.parse(String(frontMatter.queued_at || ""));\n  const imageOrigin = String(frontMatter.image_origin || "").toLowerCase();\n\n  if (Number.isFinite(queuedAtMs) && queuedAtMs >= REAL_IMAGE_POLICY_START) {\n    if (!imageOrigin) {\n      errors.push("Missing required field: image_origin. New uNews posts must declare image_origin: real.");\n    } else if (imageOrigin !== "real") {\n      errors.push("Only image_origin: real is allowed for new uNews posts; generated or placeholder visuals are blocked.");\n    }\n  } else if (imageOrigin && imageOrigin !== "real") {\n    errors.push("Unsupported image_origin: only real is accepted.");\n  }\n\n  if (imageNames.length === 0) {
+  const imageNames = getImageNames(frontMatter);
+  const queuedAtMs = Date.parse(String(frontMatter.queued_at || ""));
+  const imageOrigin = String(frontMatter.image_origin || "").toLowerCase();
+
+  if (Number.isFinite(queuedAtMs) && queuedAtMs >= REAL_IMAGE_POLICY_START) {
+    if (!imageOrigin) {
+      errors.push("Missing required field: image_origin. New uNews posts must declare image_origin: real.");
+    } else if (imageOrigin !== "real") {
+      errors.push("Only image_origin: real is allowed for new uNews posts; generated or placeholder visuals are blocked.");
+    }
+  } else if (imageOrigin && imageOrigin !== "real") {
+    errors.push("Unsupported image_origin: only real is accepted.");
+  }
+
+  if (imageNames.length === 0) {
     errors.push("Missing image/images: Telegram posts require a safe visual asset.");
   }
   for (const imageName of imageNames) {
