@@ -1,7 +1,15 @@
 {
   "schema": 1,
-  "updated_at": "2026-08-21T05:59:01.056Z",
+  "updated_at": "2026-09-06T16:12:32.274Z",
   "errors": [
+    {
+      "project": "sunpole/uChurch-public",
+      "key": "sunpole/uChurch-public|main|news/2026-09-06-uchurch-v17-11-97-gallery-control.md",
+      "version": "17.11.97",
+      "errors": [
+        "Patchnote policy failed for sunpole/uChurch-public|main|news/2026-09-06-uchurch-v17-11-97-gallery-control.md:\n- Missing required field: image_origin. New uNews posts must declare image_origin: real."
+      ]
+    },
     {
       "project": "sunpole/udream",
       "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
