@@ -71,6 +71,7 @@
     "sunpole/uImposition|main|news/2026-07-27-uimposition-v0-7-0-alpha-5-user-production-plans.md",
     "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1-update.md",
     "sunpole/uMontage-releases|main|news/2026-09-04-umontage-control-v1.md",
+    "sunpole/uMontage-releases|main|news/2026-09-07-umontage-v1-0-0-release.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-0-fifo-queue.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-1-audit-hardening.md",
     "sunpole/uNews|main|news/2026-07-18-unews-v0-2-2-health-contract.md",
@@ -1366,6 +1367,18 @@
       "project": "uChurch",
       "series": "uchurch",
       "type": "bugfix"
+    },
+    "sunpole/uMontage-releases|main|news/2026-09-07-umontage-v1-0-0-release.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        140
+      ],
+      "post_url": "https://t.me/uNewsLog/140",
+      "queued_at": "2026-09-07T16:22:00.000Z",
+      "published_at": "2026-09-07T16:28:27.968Z",
+      "project": "uMontage",
+      "series": "umontage",
+      "type": "release"
     }
   }
 }
