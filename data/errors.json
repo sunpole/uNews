@@ -1,7 +1,15 @@
 {
   "schema": 1,
-  "updated_at": "2026-09-18T12:55:23.062Z",
+  "updated_at": "2026-09-25T13:36:53.270Z",
   "errors": [
+    {
+      "project": "sunpole/uChurch-public",
+      "key": "sunpole/uChurch-public|main|news/2026-09-25-uchurch-v17-11-103-pilot-entry.md",
+      "version": "17.11.103",
+      "errors": [
+        "Patchnote policy failed for sunpole/uChurch-public|main|news/2026-09-25-uchurch-v17-11-103-pilot-entry.md:\n- Missing required field: image_origin. New uNews posts must declare image_origin: real.\n- Missing image/images: Telegram posts require a safe visual asset."
+      ]
+    },
     {
       "project": "sunpole/stilist",
       "key": "sunpole/stilist|main|news/2026-09-18-stilist-0.7.2-portfolio-intake.md",
