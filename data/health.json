@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "last_successful_check_at": "2026-10-07T05:41:59.819Z",
-  "last_attempt_at": "2026-10-07T05:41:59.819Z",
-  "last_attempt_status": "success",
+  "last_attempt_at": "2026-10-07T12:20:41.844Z",
+  "last_attempt_status": "failed",
   "pending_count": 15,
   "ready_project_count": 0,
   "error_count": 4,
   "selected_key": null,
   "mode": "publish",
-  "last_error": null
+  "last_error": "Telegram sendPhoto network request failed."
 }

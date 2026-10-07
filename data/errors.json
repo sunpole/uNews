@@ -1,37 +1,14 @@
 {
   "schema": 1,
-  "updated_at": "2026-09-25T13:36:53.270Z",
+  "updated_at": "2026-10-07T12:20:41.844Z",
   "errors": [
     {
-      "project": "sunpole/uChurch-public",
-      "key": "sunpole/uChurch-public|main|news/2026-09-25-uchurch-v17-11-103-pilot-entry.md",
-      "version": "17.11.103",
+      "kind": "fatal-run",
+      "project": null,
+      "key": null,
+      "version": null,
       "errors": [
-        "Patchnote policy failed for sunpole/uChurch-public|main|news/2026-09-25-uchurch-v17-11-103-pilot-entry.md:\n- Missing required field: image_origin. New uNews posts must declare image_origin: real.\n- Missing image/images: Telegram posts require a safe visual asset."
-      ]
-    },
-    {
-      "project": "sunpole/stilist",
-      "key": "sunpole/stilist|main|news/2026-09-18-stilist-0.7.2-portfolio-intake.md",
-      "version": "0.7.2",
-      "errors": [
-        "Project series \"sunpolehub\" has no registered intro post. Publish type: intro first; future updates must link back to it."
-      ]
-    },
-    {
-      "project": "sunpole/uFont",
-      "key": "sunpole/uFont|main|news/2026-09-18-ufont-0.7.1-user-tags.md",
-      "version": "0.7.1",
-      "errors": [
-        "Project series \"ufont\" has no registered intro post. Publish type: intro first; future updates must link back to it."
-      ]
-    },
-    {
-      "project": "sunpole/udream",
-      "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
-      "version": "23.8.11",
-      "errors": [
-        "Patchnote policy failed for sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md:\n- Unsupported type: architecture"
+        "Telegram sendPhoto network request failed."
       ]
     }
   ]
