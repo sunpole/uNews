@@ -1,14 +1,29 @@
 {
   "schema": 1,
-  "updated_at": "2026-10-07T12:20:41.844Z",
+  "updated_at": "2026-10-07T12:23:31.878Z",
   "errors": [
     {
-      "kind": "fatal-run",
-      "project": null,
-      "key": null,
-      "version": null,
+      "project": "sunpole/stilist",
+      "key": "sunpole/stilist|main|news/2026-09-18-stilist-0.7.2-portfolio-intake.md",
+      "version": "0.7.2",
       "errors": [
-        "Telegram sendPhoto network request failed."
+        "Project series \"sunpolehub\" has no registered intro post. Publish type: intro first; future updates must link back to it."
+      ]
+    },
+    {
+      "project": "sunpole/uFont",
+      "key": "sunpole/uFont|main|news/2026-09-18-ufont-0.7.1-user-tags.md",
+      "version": "0.7.1",
+      "errors": [
+        "Project series \"ufont\" has no registered intro post. Publish type: intro first; future updates must link back to it."
+      ]
+    },
+    {
+      "project": "sunpole/udream",
+      "key": "sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md",
+      "version": "23.8.11",
+      "errors": [
+        "Patchnote policy failed for sunpole/udream|main|news/2026-07-23-udream-v23-8-11-two-book-architecture.md:\n- Unsupported type: architecture"
       ]
     }
   ]
