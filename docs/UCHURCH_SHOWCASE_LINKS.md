@@ -23,3 +23,17 @@ The workflow shares the publication concurrency group. It sends no new posts.
 Rollback: revert the policy commit for future publications. Historical buttons
 require a separate explicitly reviewed removal operation; reverting source does
 not change already-published Telegram messages. No CRM or VPS changes are made.
+
+## Verified operation
+
+Dry-run Actions 37946207318 selected 64 posts. Apply 37946310088 succeeded:
+64 confirmed `editMessageReplyMarkup` results, no new messages. Checkpoint
+6b3e259 records all 64 URLs/IDs. Comparison with the pre-operation state proved
+unchanged publication keys, message ID arrays and previous detail fields.
+Subsequent dry planning returns zero targets. The public Telegram embed does
+not show inline keyboards; confirmation came from Telegram API responses.
+
+The full npm suite passed locally and in both runs. The added regression checks
+cover footer deduplication, caption limit, unrelated-project isolation,
+idempotence, button-only requests, sanitized network failure and missing API
+confirmation. Historical caption and media contents were never submitted.
