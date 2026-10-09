@@ -43,6 +43,7 @@
     "sunpole/uChurch-public|main|news/2026-10-07-uchurch-v17-11-107-showcase.md",
     "sunpole/uChurch-public|main|news/2026-10-07-uchurch-v17-11-108-session-save.md",
     "sunpole/uChurch-public|main|news/2026-10-08-uchurch-v17-11-109-idle-recovery.md",
+    "sunpole/uChurch-public|main|news/2026-10-09-uchurch-v17-11-110-table-columns.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-21-public-development.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-22-external-data-root.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-23-controlled-data-attachment.md",
@@ -1458,6 +1459,18 @@
       "series": "uchurch",
       "type": "release",
       "caption_edited_at": "2026-10-09T06:50:08.321Z"
+    },
+    "sunpole/uChurch-public|main|news/2026-10-09-uchurch-v17-11-110-table-columns.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        147
+      ],
+      "post_url": "https://t.me/uNewsLog/147",
+      "queued_at": "2026-10-09T07:10:00.000Z",
+      "published_at": "2026-10-09T07:32:56.091Z",
+      "project": "uChurch",
+      "series": "uchurch",
+      "type": "bugfix"
     }
   }
 }
