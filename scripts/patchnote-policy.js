@@ -1,3 +1,5 @@
+import { UCHURCH_SHOWCASE_URL } from "./lib/uchurch-showcase.js";
+
 export const TELEGRAM_CAPTION_LIMIT = 1024;
 export const TELEGRAM_MESSAGE_LIMIT = 4096;
 
@@ -66,7 +68,9 @@ export function buildPublicationPolicy({ frontMatter, body, introUrl = null }) {
   const introLine = introUrl && String(frontMatter.type || "").toLowerCase() !== "intro"
     ? `\nО проекте: ${introUrl}`
     : "";
-  const footer = `Ссылка: ${link}${introLine}\n\n${hashtags}`;
+  const showcaseLine = frontMatter.project === "uChurch" && link !== UCHURCH_SHOWCASE_URL
+    ? `\nВитрина: ${UCHURCH_SHOWCASE_URL}` : "";
+  const footer = `Ссылка: ${link}${showcaseLine}${introLine}\n\n${hashtags}`;
 
   const caption = limitWithFooter(mainText, footer, TELEGRAM_CAPTION_LIMIT);
   const message = limitWithFooter(mainText, footer, TELEGRAM_MESSAGE_LIMIT);
