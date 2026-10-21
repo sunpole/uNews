@@ -88,7 +88,7 @@ images:
 
 ### Поля
 
-- `type` — тип публикации: `intro`, `patch`, `report`, `note`, `docs`, `documentation`, `feature`, `bugfix`, `release`.
+- `type` — тип публикации: `intro`, `test`, `release`, `patch`, `bugfix`, `docs`, `documentation`, `audit`, `ui`, `feature`, `warning`, `idea`, `roadmap`, `report`, `note`. Источник истины — `ALLOWED_TYPES` в `scripts/patchnote-policy.js`.
 - `project` — название проекта.
 - `series` — короткий ключ серии, например `500td`, `usugar`, `udream`.
 - `title` — заголовок публикации.
