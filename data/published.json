@@ -2,6 +2,7 @@
   "published": [
     "sunpole/500|main|news/2026-06-14-500td-v1-0-2-pages-preview.md",
     "sunpole/500|main|news/2026-06-15-500td-test-autopublish.md",
+    "sunpole/uAgent|main|news/2026-11-16-uagent-intro.md",
     "sunpole/uChurch-public|main|news/2026-08-11-uchurch-v17-11-42-public-portal.md",
     "sunpole/uChurch-public|main|news/2026-08-11-uchurch-v17-11-43-test-database.md",
     "sunpole/uChurch-public|main|news/2026-08-11-uchurch-v17-11-44-demo-qa.md",
@@ -1728,6 +1729,18 @@
       "project": "uChurch",
       "series": "uchurch",
       "type": "feature"
+    },
+    "sunpole/uAgent|main|news/2026-11-16-uagent-intro.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        153
+      ],
+      "post_url": "https://t.me/uNewsLog/153",
+      "queued_at": "2026-11-16T20:27:27.000Z",
+      "published_at": "2026-11-16T20:33:37.380Z",
+      "project": "uAgent",
+      "series": "uagent",
+      "type": "intro"
     }
   }
 }

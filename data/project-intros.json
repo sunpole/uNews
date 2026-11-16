@@ -16,6 +16,14 @@
       "message_id": 133,
       "post_url": "https://t.me/uNewsLog/133",
       "published_at": "2026-09-04T09:28:52.624Z"
+    },
+    "uagent": {
+      "project": "uAgent",
+      "series": "uagent",
+      "key": "sunpole/uAgent|main|news/2026-11-16-uagent-intro.md",
+      "message_id": 153,
+      "post_url": "https://t.me/uNewsLog/153",
+      "published_at": "2026-11-16T20:33:37.380Z"
     }
   },
   "legacy_without_intro": [
