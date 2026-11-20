@@ -54,6 +54,7 @@
     "sunpole/uChurch-public|main|news/2026-11-20-uchurch-v17-11-116-sec1.md",
     "sunpole/uChurch-public|main|news/2026-11-20-uchurch-v17-11-117-sec1-json.md",
     "sunpole/uChurch-public|main|news/2026-11-20-uchurch-v17-11-118-vite.md",
+    "sunpole/uChurch-public|main|news/2026-11-20-uchurch-v17-11-119-watch.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-21-public-development.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-22-external-data-root.md",
     "sunpole/uChurch|main|news/2026-08-09-uchurch-v17-11-23-controlled-data-attachment.md",
@@ -1790,6 +1791,18 @@
       "post_url": "https://t.me/uNewsLog/157",
       "queued_at": "2026-11-20T11:29:55.000Z",
       "published_at": "2026-11-20T11:32:20.622Z",
+      "project": "uChurch",
+      "series": "uchurch",
+      "type": "patch"
+    },
+    "sunpole/uChurch-public|main|news/2026-11-20-uchurch-v17-11-119-watch.md": {
+      "method": "sendPhoto",
+      "message_ids": [
+        158
+      ],
+      "post_url": "https://t.me/uNewsLog/158",
+      "queued_at": "2026-11-20T12:26:26.000Z",
+      "published_at": "2026-11-20T12:28:51.868Z",
       "project": "uChurch",
       "series": "uchurch",
       "type": "patch"
